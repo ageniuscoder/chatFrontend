@@ -7,8 +7,8 @@ import Loading from '../common/Loading';
 const ForgotPasswordPage = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    email: '',
-    resetToken: '',
+    phone: '',
+    otp: '',
     newPassword: '',
     confirmPassword: ''
   });
@@ -26,7 +26,7 @@ const ForgotPasswordPage = () => {
 
   const handleStep1Submit = async (e) => {
     e.preventDefault();
-    const result = await forgotPassword(formData.email);
+    const result = await forgotPassword(formData.phone);
     if (result.success) {
       setStep(2);
     }
@@ -46,9 +46,9 @@ const ForgotPasswordPage = () => {
     }
 
     const result = await resetPassword({
-      email: formData.email,
-      token: formData.resetToken,
-      new_password: formData.newPassword
+      phone: formData.phone,
+      otp: formData.otp,
+      newPassword: formData.newPassword
     });
 
     if (result.success) {
@@ -85,7 +85,7 @@ const ForgotPasswordPage = () => {
           </h1>
           <p className="text-blue-100">
             {step === 1 
-              ? 'Enter your email to reset your password' 
+              ? 'Enter your phone number to reset your password' 
               : 'Enter the reset code and your new password'
             }
           </p>
@@ -95,17 +95,17 @@ const ForgotPasswordPage = () => {
           {step === 1 ? (
             <form onSubmit={handleStep1Submit} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  Phone Number
                 </label>
                 <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="Enter your email address"
+                  placeholder="Enter your phone number"
                   required
                 />
               </div>
@@ -128,18 +128,18 @@ const ForgotPasswordPage = () => {
             <form onSubmit={handleStep2Submit} className="space-y-6">
               <div className="text-center mb-6">
                 <p className="text-gray-600 mb-2">We sent a reset code to:</p>
-                <p className="font-semibold text-gray-800">{formData.email}</p>
+                <p className="font-semibold text-gray-800">{formData.phone}</p>
               </div>
 
               <div>
-                <label htmlFor="resetToken" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
                   Reset Code
                 </label>
                 <input
                   type="text"
-                  id="resetToken"
-                  name="resetToken"
-                  value={formData.resetToken}
+                  id="otp"
+                  name="otp"
+                  value={formData.otp}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-center text-lg tracking-widest"
                   placeholder="123456"

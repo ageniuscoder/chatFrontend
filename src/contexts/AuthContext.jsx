@@ -39,13 +39,16 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       setLoading(true);
       const response = await authAPI.login({ username, password });
-      const { token, user } = response.data;
+      const { token } = response.data;
       
       localStorage.setItem('token', token);
-      setUser(user);
+      
+      const userResponse = await userAPI.getProfile();
+      setUser(userResponse.data);
+      
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
+      const message = error.response?.data?.error || 'Login failed';
       setError(message);
       return { success: false, error: message };
     } finally {
@@ -60,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.signupInitiate(userData);
       return { success: true, data: response.data };
     } catch (error) {
-      const message = error.response?.data?.message || 'Signup failed';
+      const message = error.response?.data?.error || 'Signup failed';
       setError(message);
       return { success: false, error: message };
     } finally {
@@ -73,13 +76,15 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       setLoading(true);
       const response = await authAPI.signupVerify(verificationData);
-      const { token, user } = response.data;
+      const { token } = response.data;
       
       localStorage.setItem('token', token);
-      setUser(user);
+      const userResponse = await userAPI.getProfile();
+      setUser(userResponse.data);
+      
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Verification failed';
+      const message = error.response?.data?.error || 'Verification failed';
       setError(message);
       return { success: false, error: message };
     } finally {
@@ -87,14 +92,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const forgotPassword = async (email) => {
+  const forgotPassword = async (phone) => {
     try {
       setError(null);
       setLoading(true);
-      const response = await authAPI.forgotInitiate({ email });
+      const response = await authAPI.forgotInitiate({ phone });
       return { success: true, data: response.data };
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to initiate password reset';
+      const message = error.response?.data?.error || 'Failed to initiate password reset';
       setError(message);
       return { success: false, error: message };
     } finally {
@@ -106,10 +111,15 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       setLoading(true);
-      await authAPI.forgotReset(resetData);
+      await authAPI.forgotReset({
+        phone: resetData.phone,
+        otp: resetData.otp,
+        // Fix: Use "new_password" key to match the backend API's JSON tag.
+        new_password: resetData.newPassword,
+      });
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Password reset failed';
+      const message = error.response?.data?.error || 'Password reset failed';
       setError(message);
       return { success: false, error: message };
     } finally {
@@ -124,7 +134,7 @@ export const AuthProvider = ({ children }) => {
       setUser(response.data);
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Profile update failed';
+      const message = error.response?.data?.error || 'Profile update failed';
       setError(message);
       return { success: false, error: message };
     }

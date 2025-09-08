@@ -27,7 +27,7 @@ export const ChatProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await conversationAPI.getConversations();
-      setConversations(response.data);
+      setConversations(response.data.conversations);
     } catch (error) {
       setError('Failed to fetch conversations');
     } finally {
@@ -41,9 +41,9 @@ export const ChatProvider = ({ children }) => {
         page,
         limit: 50
       });
-      
+
       const conversationMessages = response.data.messages || [];
-      
+
       if (page === 1) {
         setMessages(prev => ({
           ...prev,
@@ -58,7 +58,7 @@ export const ChatProvider = ({ children }) => {
           ]
         }));
       }
-      
+
       return response.data;
     } catch (error) {
       setError('Failed to fetch messages');
@@ -75,10 +75,9 @@ export const ChatProvider = ({ children }) => {
         content,
         status: 'sending',
         created_at: new Date().toISOString(),
-        is_current_user: true
       };
 
-      // Add temporary message
+      // Add temporary message locally
       setMessages(prev => ({
         ...prev,
         [conversationId]: [...(prev[conversationId] || []), tempMessage]
@@ -89,24 +88,16 @@ export const ChatProvider = ({ children }) => {
         content
       });
 
-      // Replace temporary message with real one
+      // Update temporary message ID with the real one from the server
       setMessages(prev => ({
         ...prev,
         [conversationId]: prev[conversationId].map(msg => 
-          msg.id === tempId ? response.data : msg
+          msg.id === tempId ? { ...msg, id: response.data.message_id, status: 'sent' } : msg
         )
       }));
 
-      // Update conversation last message
-      setConversations(prev => prev.map(conv =>
-        conv.id === conversationId
-          ? { ...conv, last_message: response.data }
-          : conv
-      ));
-
       return response.data;
     } catch (error) {
-      // Remove temporary message on error
       setMessages(prev => ({
         ...prev,
         [conversationId]: prev[conversationId].filter(msg => msg.id !== tempId)
@@ -118,19 +109,20 @@ export const ChatProvider = ({ children }) => {
 
   const markAsRead = async (conversationId, messageIds) => {
     try {
+      if (!Array.isArray(messageIds) || messageIds.length === 0) return;
+
+      // Fix: Iterate over all message IDs and send a request for each
+      // Fix: Send a single request for marking as read
       await messageAPI.markAsRead({
-        conversation_id: conversationId,
         message_ids: messageIds
       });
 
-      // Update message status locally
+      // Update message status locally right away
       setMessages(prev => ({
         ...prev,
-        [conversationId]: prev[conversationId]?.map(msg =>
-          messageIds.includes(msg.id)
-            ? { ...msg, status: 'read' }
-            : msg
-        ) || []
+        [conversationId]: prev[conversationId].map(msg => 
+          messageIds.includes(msg.id) ? { ...msg, status: 'read' } : msg
+        )
       }));
     } catch (error) {
       console.error('Failed to mark messages as read:', error);
@@ -141,10 +133,10 @@ export const ChatProvider = ({ children }) => {
     try {
       const response = await conversationAPI.createPrivateChat({ user_id: userId });
       const newConversation = response.data;
-      
+
       setConversations(prev => [newConversation, ...prev]);
       setActiveConversation(newConversation);
-      
+
       return newConversation;
     } catch (error) {
       setError('Failed to create conversation');

@@ -39,6 +39,7 @@ export const WebSocketProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
+      // Fix: Append the JWT token as a query parameter for authentication
       const wsUrl = `${WEBSOCKET_URL}?token=${token}`;
       wsRef.current = new WebSocket(wsUrl);
 
@@ -51,7 +52,7 @@ export const WebSocketProvider = ({ children }) => {
       wsRef.current.onclose = (event) => {
         console.log('WebSocket disconnected', event.code, event.reason);
         setIsConnected(false);
-        
+
         // Only attempt reconnection if it wasn't a normal close
         if (event.code !== 1000 && isAuthenticated && reconnectAttempts < maxReconnectAttempts) {
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
@@ -83,11 +84,11 @@ export const WebSocketProvider = ({ children }) => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
     }
-    
+
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.close(1000, 'User disconnected');
     }
-    
+
     wsRef.current = null;
     setIsConnected(false);
     setReconnectAttempts(0);
@@ -98,24 +99,24 @@ export const WebSocketProvider = ({ children }) => {
       case 'message':
         addMessage(data);
         break;
-        
+
       case 'read_receipt':
         updateMessageStatus(data.message_id, data.conversation_id, 'read');
         break;
-        
+
       case 'typing_start':
         setTypingStatus(data.conversation_id, data.user_id, true);
         break;
-        
+
       case 'typing_stop':
         setTypingStatus(data.conversation_id, data.user_id, false);
         break;
-        
+
       case 'presence':
         // Handle user presence updates
         console.log('User presence update:', data);
         break;
-        
+
       default:
         console.log('Unknown WebSocket message type:', data.type);
     }

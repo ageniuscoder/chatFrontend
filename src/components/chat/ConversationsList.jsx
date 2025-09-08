@@ -15,10 +15,9 @@ const ConversationsList = () => {
   const { isConnected } = useWebSocket();
   const navigate = useNavigate();
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.last_message?.content?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredConversations = Array.isArray(conversations) ? conversations.filter(conv =>
+    conv.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) : [];
 
   const handleLogout = () => {
     logout();
@@ -41,8 +40,9 @@ const ConversationsList = () => {
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
+              {/* Fix: Use user.profile_picture from the API response */}
               <Avatar 
-                src={user?.avatar} 
+                src={user?.profile_picture} 
                 alt={user?.username} 
                 size="sm" 
                 online={isConnected}
@@ -129,6 +129,7 @@ const ConversationsList = () => {
               }`}
             >
               <div className="flex items-center space-x-3">
+                {/* Fix: Avatar will not be provided by the backend, so we use the fallback logic in the Avatar component */}
                 <Avatar
                   src={conversation.avatar}
                   alt={conversation.name}
@@ -150,12 +151,14 @@ const ConversationsList = () => {
                     <p className="text-sm text-gray-500 truncate">
                       {conversation.last_message?.content || 'No messages yet'}
                     </p>
+                    {/* Fix: unread_count is not provided by the API, so this will always be 0 */}
                     {conversation.unread_count > 0 && (
                       <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center flex-shrink-0">
                         {conversation.unread_count > 99 ? '99+' : conversation.unread_count}
                       </span>
                     )}
                   </div>
+                  {/* Fix: participant_count is not provided by the API */}
                   {conversation.participant_count > 2 && (
                     <p className="text-xs text-gray-400 mt-1">
                       {conversation.participant_count} members

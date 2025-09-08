@@ -12,9 +12,6 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     username: user?.username || '',
-    email: user?.email || '',
-    phone_number: user?.phone_number || '',
-    bio: user?.bio || ''
   });
   const [previewAvatar, setPreviewAvatar] = useState(null);
 
@@ -44,11 +41,16 @@ const ProfilePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const result = await updateProfile({
-      ...formData,
-      ...(previewAvatar && { avatar: previewAvatar })
-    });
+
+    const updateData = {
+      username: formData.username
+    };
+
+    if (previewAvatar) {
+      updateData.profile_picture = previewAvatar;
+    }
+
+    const result = await updateProfile(updateData);
 
     if (result.success) {
       setIsEditing(false);
@@ -61,9 +63,6 @@ const ProfilePage = () => {
     setPreviewAvatar(null);
     setFormData({
       username: user?.username || '',
-      email: user?.email || '',
-      phone_number: user?.phone_number || '',
-      bio: user?.bio || ''
     });
   };
 
@@ -82,7 +81,7 @@ const ProfilePage = () => {
               </button>
               <h1 className="text-xl font-semibold text-gray-900">Profile</h1>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               {isEditing ? (
                 <>
@@ -125,7 +124,7 @@ const ProfilePage = () => {
               onClick={handleAvatarClick}
             >
               <Avatar
-                src={previewAvatar || user?.avatar}
+                src={previewAvatar || user?.profile_picture}
                 alt={user?.username}
                 size="xl"
                 className="mx-auto"
@@ -144,9 +143,6 @@ const ProfilePage = () => {
               className="hidden"
             />
             <h2 className="text-2xl font-bold text-white mt-4">{user?.username}</h2>
-            {user?.email && (
-              <p className="text-blue-100 mt-1">{user.email}</p>
-            )}
           </div>
 
           {/* Profile Form */}
@@ -168,53 +164,7 @@ const ProfilePage = () => {
                 />
               </div>
 
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50 disabled:text-gray-500"
-                  placeholder="your.email@example.com"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  id="phone_number"
-                  name="phone_number"
-                  value={formData.phone_number}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50 disabled:text-gray-500"
-                  placeholder="+1 (555) 123-4567"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
-                  Bio
-                </label>
-                <textarea
-                  id="bio"
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50 disabled:text-gray-500 resize-none"
-                  placeholder="Tell us about yourself..."
-                />
-              </div>
+              {/* Fix: Removed the bio field as it is not supported by the backend */}
 
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4">

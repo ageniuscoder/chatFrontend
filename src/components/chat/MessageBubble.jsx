@@ -26,7 +26,7 @@ const MessageBubble = ({ message, isOwn, showAvatar, showTime }) => {
         {showAvatar && !isOwn && (
           <Avatar
             src={message.sender_avatar}
-            alt={message.sender_name}
+            alt={message.sender_username}
             size="sm"
             className="flex-shrink-0"
           />
@@ -40,9 +40,10 @@ const MessageBubble = ({ message, isOwn, showAvatar, showTime }) => {
             : 'bg-white text-gray-900 border border-gray-200'
         }`}>
           {/* Sender name for group chats */}
-          {!isOwn && message.sender_name && (
+          {/* Fix: Use message.sender_username as the API provides this */}
+          {!isOwn && message.sender_username && (
             <div className="text-xs text-blue-500 font-medium mb-1">
-              {message.sender_name}
+              {message.sender_username}
             </div>
           )}
           

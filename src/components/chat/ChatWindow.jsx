@@ -34,14 +34,15 @@ const ChatWindow = () => {
     // Mark messages as read when conversation becomes active
     if (activeConversation && conversationMessages.length > 0) {
       const unreadMessageIds = conversationMessages
-        .filter(msg => !msg.is_current_user && msg.status !== 'read')
+        .filter(msg => msg.sender_id !== user.id && msg.status !== 'read')
         .map(msg => msg.id);
       
       if (unreadMessageIds.length > 0) {
+        // Fix: Send all unread message IDs to the markAsRead function
         markAsRead(activeConversation.id, unreadMessageIds);
       }
     }
-  }, [activeConversation, conversationMessages]);
+  }, [activeConversation, conversationMessages, user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -104,8 +105,8 @@ const ChatWindow = () => {
             <div className="text-sm text-gray-500">
               {conversationTypingUsers.length > 0 ? (
                 <TypingIndicator users={conversationTypingUsers} />
-              ) : activeConversation.participant_count > 2 ? (
-                `${activeConversation.participant_count} members`
+              ) : activeConversation.is_group ? (
+                `${activeConversation.participant_count || 2} members`
               ) : activeConversation.is_online ? (
                 'online'
               ) : (
@@ -139,16 +140,14 @@ const ChatWindow = () => {
             <MessageBubble
               key={msg.id}
               message={msg}
-              isOwn={msg.is_current_user}
+              isOwn={msg.sender_id === user.id}
               showAvatar={
                 index === 0 ||
-                conversationMessages[index - 1].is_current_user !== msg.is_current_user ||
-                conversationMessages[index - 1].sender_id !== msg.sender_id
+                (conversationMessages[index - 1].sender_id !== msg.sender_id)
               }
               showTime={
                 index === conversationMessages.length - 1 ||
-                conversationMessages[index + 1].is_current_user !== msg.is_current_user ||
-                new Date(conversationMessages[index + 1].created_at) - new Date(msg.created_at) > 300000 // 5 minutes
+                new Date(conversationMessages[index + 1].sent_at) - new Date(msg.sent_at) > 300000
               }
             />
           ))

@@ -1,71 +1,99 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MessageCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Loading from '../common/Loading';
 
 const SignupPage = () => {
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    username: '',
-    phoneNumber: '',
-    password: '',
-    confirmPassword: '',
-    otp: ''
+  const [step, setStep] = useState(() => Number(localStorage.getItem("signupStep") || 1));
+
+  const [formData, setFormData] = useState(() => {
+    const savedData = localStorage.getItem("signupData");
+    if (savedData) {
+      return JSON.parse(savedData);
+    }
+    return {
+      username: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      otp: ''
+    };
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { signupInitiate, signupVerify, loading, error } = useAuth();
+  const { signupInitiate, signupVerify, loading, error, setError } = useAuth();
   const navigate = useNavigate();
+  const otpRefs = useRef([]);
+
+  useEffect(() => {
+    console.log("👀 Step changed:", step);
+
+    if (step === 2) {
+      setTimeout(() => {
+        otpRefs.current[0]?.focus();
+      }, 100);
+    }
+  }, [step]);
 
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleStep1Submit = async (e) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
 
     if (formData.password.length < 6) {
-      alert('Password must be at least 6 characters long');
+      setError('Password must be at least 6 characters long');
       return;
     }
 
     const result = await signupInitiate({
       username: formData.username,
-      phone: formData.phoneNumber,
+      phone: formData.phone,
       password: formData.password
     });
 
     if (result.success) {
       setStep(2);
+      localStorage.setItem("signupStep", "2");
+      localStorage.setItem("signupData", JSON.stringify(formData));
+      setError(null);
     }
   };
 
   const handleStep2Submit = async (e) => {
     e.preventDefault();
-    
+
+    const otp = formData.otp.trim();
+    if (otp.length !== 6) {
+      setError('Please enter a valid 6-digit code');
+      return;
+    }
+
     const result = await signupVerify({
       username: formData.username,
-      phone: formData.phoneNumber,
+      phone: formData.phone,
       password: formData.password,
-      otp: formData.otp
+      otp
     });
 
     if (result.success) {
+      localStorage.removeItem("signupStep");
+      localStorage.removeItem("signupData");
       navigate('/chat');
     }
   };
 
   const goBack = () => {
     setStep(1);
+    localStorage.setItem("signupStep", "1");
   };
 
   return (
@@ -97,49 +125,40 @@ const SignupPage = () => {
           {step === 1 ? (
             <form onSubmit={handleStep1Submit} className="space-y-6">
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                  Username
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
                 <input
                   type="text"
-                  id="username"
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Choose a username"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                 <input
                   type="tel"
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
+                  name="phone"
+                  value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="+1 (555) 123-4567"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="+91 9876543210"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    id="password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Create a password"
                     required
                     minLength={6}
@@ -155,17 +174,14 @@ const SignupPage = () => {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm Password
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
                 <div className="relative">
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
-                    id="confirmPassword"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Confirm your password"
                     required
                   />
@@ -188,7 +204,7 @@ const SignupPage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
               >
                 {loading ? <Loading size="sm" className="text-white" /> : 'Continue'}
               </button>
@@ -197,58 +213,52 @@ const SignupPage = () => {
             <form onSubmit={handleStep2Submit} className="space-y-6">
               <div className="text-center mb-6">
                 <p className="text-gray-600 mb-2">We sent a verification code to:</p>
-                <p className="font-semibold text-gray-800">{formData.phoneNumber}</p>
+                <p className="font-semibold text-gray-800">{formData.phone}</p>
               </div>
 
               <div>
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
-                  Verification Code
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Verification Code</label>
                 <input
+                  ref={(el) => otpRefs.current[0] = el}
                   type="text"
-                  id="otp"
                   name="otp"
                   value={formData.otp}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-center text-lg tracking-widest"
-                  placeholder="123456"
                   maxLength={6}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="123456"
                   required
                 />
               </div>
 
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                  <p className="text-red-600 text-sm">{error}</p>
+                  {Array.isArray(error) ? (
+                    <ul className="list-disc list-inside space-y-1 text-red-600 text-sm">
+                      {error.map((err, index) => (
+                        <li key={index}>{err.message}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-red-600 text-sm">{error}</p>
+                  )}
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
               >
                 {loading ? <Loading size="sm" className="text-white" /> : 'Verify & Create Account'}
               </button>
-
-              <div className="text-center">
-                <button 
-                  type="button"
-                  className="text-blue-500 hover:text-blue-600 text-sm font-medium transition-colors"
-                >
-                  Resend code
-                </button>
-              </div>
             </form>
           )}
 
           <div className="mt-8 pt-6 border-t border-gray-200">
             <p className="text-center text-gray-600">
               Already have an account?{' '}
-              <Link 
-                to="/login" 
-                className="text-blue-500 hover:text-blue-600 font-semibold transition-colors"
-              >
+              <Link to="/login" className="text-blue-500 hover:text-blue-600 font-semibold transition-colors">
                 Sign in
               </Link>
             </p>

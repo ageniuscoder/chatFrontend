@@ -24,7 +24,10 @@ const LoginPage = () => {
     e.preventDefault();
     const result = await login(formData.username, formData.password);
     if (result.success) {
-      navigate('/chat');
+      // Defer navigation to allow state to fully update
+      setTimeout(() => {
+        navigate('/chat');
+      }, 0);
     }
   };
 
