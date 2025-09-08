@@ -40,7 +40,7 @@ const SignupPage = () => {
 
     const result = await signupInitiate({
       username: formData.username,
-      phone_number: formData.phoneNumber,
+      phone: formData.phoneNumber,
       password: formData.password
     });
 
@@ -54,7 +54,7 @@ const SignupPage = () => {
     
     const result = await signupVerify({
       username: formData.username,
-      phone_number: formData.phoneNumber,
+      phone: formData.phoneNumber,
       password: formData.password,
       otp: formData.otp
     });
