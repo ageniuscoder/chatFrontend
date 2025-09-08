@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Search, Plus, Settings, LogOut, User } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useChat } from '../../contexts/ChatContext';
-import { useWebSocket } from '../../contexts/WebSocketContext';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useChat } from '../../contexts/ChatContext.jsx';
+import { useWebSocket } from '../../contexts/WebSocketContext.jsx';
 import Avatar from '../common/Avatar';
 import { formatMessageTime } from '../../utils/dateUtils';
 import { useNavigate } from 'react-router-dom';

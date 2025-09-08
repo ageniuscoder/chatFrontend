@@ -1,6 +1,6 @@
-export const API_BASE_URL = '/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-export const WEBSOCKET_URL = 'ws://localhost:8082/api/ws';
+export const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL;
 
 export const MESSAGE_STATUS = {
   SENDING: 'sending',

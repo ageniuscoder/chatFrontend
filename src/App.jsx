@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { ChatProvider } from './contexts/ChatContext';
-import { WebSocketProvider } from './contexts/WebSocketContext';
+import { AuthProvider } from './contexts/AuthContext.jsx';
+import { ChatProvider } from './contexts/ChatContext.jsx';
+import { WebSocketProvider } from './contexts/WebSocketContext.jsx';
 
 // Components
 import Layout from './components/common/Layout';

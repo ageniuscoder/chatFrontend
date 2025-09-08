@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Phone, VideoIcon, MoreVertical } from 'lucide-react';
-import { useChat } from '../../contexts/ChatContext';
-import { useWebSocket } from '../../contexts/WebSocketContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useChat } from '../../contexts/ChatContext.jsx';
+import { useWebSocket } from '../../contexts/WebSocketContext.jsx';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import Avatar from '../common/Avatar';
 import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
