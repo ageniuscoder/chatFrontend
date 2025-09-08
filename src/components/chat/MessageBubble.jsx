@@ -57,7 +57,7 @@ const MessageBubble = ({ message, isOwn, showAvatar, showTime }) => {
             isOwn ? 'text-blue-100' : 'text-gray-400'
           }`}>
             <span className="text-xs">
-              {formatMessageTime(message.created_at)}
+              {formatMessageTime(message.sent_at)}
             </span>
             {isOwn && getStatusIcon()}
           </div>

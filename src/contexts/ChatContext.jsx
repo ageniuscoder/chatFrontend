@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { conversationAPI, messageAPI } from '../utils/api';
+import { useAuth } from './AuthContext';
 
 const ChatContext = createContext();
 
@@ -18,6 +19,7 @@ export const ChatProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [typingUsers, setTypingUsers] = useState({});
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchConversations();
@@ -69,12 +71,15 @@ export const ChatProvider = ({ children }) => {
   const sendMessage = async (conversationId, content) => {
     try {
       const tempId = Date.now();
+      const now = new Date().toISOString();
       const tempMessage = {
         id: tempId,
         conversation_id: conversationId,
         content,
         status: 'sending',
-        created_at: new Date().toISOString(),
+        created_at: now,
+        sent_at: now, // FIX: Add sent_at field to temporary message
+        sender_id: user.id,
       };
 
       // Add temporary message locally
@@ -111,8 +116,6 @@ export const ChatProvider = ({ children }) => {
     try {
       if (!Array.isArray(messageIds) || messageIds.length === 0) return;
 
-      // Fix: Iterate over all message IDs and send a request for each
-      // Fix: Send a single request for marking as read
       await messageAPI.markAsRead({
         message_ids: messageIds
       });
@@ -152,13 +155,25 @@ export const ChatProvider = ({ children }) => {
   };
 
   const addMessage = (message) => {
-    setMessages(prev => ({
-      ...prev,
-      [message.conversation_id]: [
-        ...(prev[message.conversation_id] || []),
-        message
-      ]
-    }));
+    setMessages(prev => {
+      const existingMessages = prev[message.conversation_id] || [];
+      // FIX: Check for duplicate only by ID, not by content
+      const isDuplicate = existingMessages.some(
+        msg => msg.id === message.id
+      );
+
+      if (isDuplicate) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        [message.conversation_id]: [
+          ...existingMessages,
+          message
+        ]
+      };
+    });
 
     // Update conversation last message
     setConversations(prev => prev.map(conv =>
