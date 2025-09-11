@@ -48,11 +48,11 @@ export const WebSocketProvider = ({ children }) => {
           break;
 
         case 'typing_start':
-          setTypingStatus(data.conversation_id, data.user_id, true);
+          setTypingStatus(data.conversation_id, data.sender_username, true);
           break;
 
         case 'typing_stop':
-          setTypingStatus(data.conversation_id, data.user_id, false);
+          setTypingStatus(data.conversation_id, data.sender_username, false);
           break;
 
         case 'presence':

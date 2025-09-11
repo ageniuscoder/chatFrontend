@@ -72,48 +72,50 @@ const fetchMessages = async (conversationId, page = 1) => {
 };
 
   const sendMessage = async (conversationId, content) => {
-    const tempId = Date.now();
-    const now = new Date().toISOString();
-    try {
-      const tempMessage = {
-        id: tempId,
-        conversation_id: conversationId,
-        content,
-        status: 'sending',
-        created_at: now,
-        sent_at: now, // FIX: Add sent_at field to temporary message
-        sender_id: user.id,
-      };
+  // FIX: Generate a more unique temporary ID to prevent collisions
+  const tempId = 'temp-' + Date.now().toString() + Math.random().toString(36).substring(2, 9);
+  const now = new Date().toISOString();
+  try {
+    const tempMessage = {
+      id: tempId,
+      conversation_id: conversationId,
+      content,
+      status: 'sending',
+      created_at: now,
+      sent_at: now,
+      sender_id: user.id,
+    };
 
-      // Add temporary message locally
-      setMessages(prev => ({
-        ...prev,
-        [conversationId]: [...(prev[conversationId] || []), tempMessage]
-      }));
+    // Add temporary message locally
+    setMessages(prev => ({
+      ...prev,
+      [conversationId]: [...(prev[conversationId] || []), tempMessage]
+    }));
 
-      const response = await messageAPI.sendMessage({
-        conversation_id: conversationId,
-        content
-      });
+    const response = await messageAPI.sendMessage({
+      conversation_id: conversationId,
+      content
+    });
 
-      // Update temporary message ID with the real one from the server
-      setMessages(prev => ({
-        ...prev,
-        [conversationId]: prev[conversationId].map(msg => 
-          msg.id === tempId ? { ...msg, id: response.data.message_id, status: 'sent' } : msg
-        )
-      }));
+    // Update temporary message ID with the real one from the server
+    setMessages(prev => ({
+      ...prev,
+      [conversationId]: prev[conversationId].map(msg => 
+        msg.id === tempId ? { ...msg, id: response.data.message_id, status: 'sent' } : msg
+      )
+    }));
 
-      return response.data;
-    } catch (error) {
-      setMessages(prev => ({
-        ...prev,
-        [conversationId]: prev[conversationId].filter(msg => msg.id !== tempId)
-      }));
-      setError('Failed to send message');
-      return null;
-    }
-  };
+    return response.data;
+  } catch (error) {
+    console.error('Failed to send message:', error);
+    setMessages(prev => ({
+      ...prev,
+      [conversationId]: prev[conversationId].filter(msg => msg.id !== tempId)
+    }));
+    setError('Failed to send message');
+    return null;
+  }
+};
 
   const markAsRead = async (conversationId, messageIds) => {
     try {
@@ -159,7 +161,6 @@ const fetchMessages = async (conversationId, page = 1) => {
   };
 
   const addMessage = (message) => {
-    let added=false;
     setMessages(prev => {
       const existingMessages = prev[message.conversation_id] || [];
       // FIX: Check for duplicate only by ID, not by content
@@ -170,7 +171,6 @@ const fetchMessages = async (conversationId, page = 1) => {
       if (isDuplicate) {
         return prev;
       }
-      added=true;
 
       return {
         ...prev,
@@ -182,13 +182,13 @@ const fetchMessages = async (conversationId, page = 1) => {
     });
 
     // Update conversation last message
-    if(added){
+    
       setConversations(prev => prev.map(conv =>
         conv.id === message.conversation_id
           ? { ...conv, last_message: message }
           : conv
       ));
-    }
+    
   };
 
   const updateMessageStatus = (messageId, conversationId, status) => {

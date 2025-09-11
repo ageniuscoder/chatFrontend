@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (profileData) => {
     const result = await updateProfileApi.execute(profileData);
-    if (result.success) setUser(result.data);
+    if (result.success) setUser(updateProfileApi.data);
     return result;
   };
 
