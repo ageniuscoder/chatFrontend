@@ -1,156 +1,86 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext } from 'react';
+import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useAuth } from './AuthContext';
 import { useChat } from './ChatContext';
 import { WEBSOCKET_URL } from '../utils/constants';
 
 const WebSocketContext = createContext();
 
-export const useWebSocket = () => {
+export const useWebSocketContext = () => {
   const context = useContext(WebSocketContext);
   if (!context) {
-    throw new Error('useWebSocket must be used within a WebSocketProvider');
+    throw new Error('useWebSocketContext must be used within a WebSocketProvider');
   }
   return context;
 };
 
 export const WebSocketProvider = ({ children }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { addMessage, updateMessageStatus, setTypingStatus } = useChat();
-  const [isConnected, setIsConnected] = useState(false);
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
-  const wsRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
-  const maxReconnectAttempts = 5;
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      connect();
-    } else {
-      disconnect();
-    }
+  const token = isAuthenticated ? localStorage.getItem('token') : null;
+  const socketUrl = token ? `${WEBSOCKET_URL}?token=${token}` : null;
 
-    return () => {
-      disconnect();
-    };
-  }, [isAuthenticated, user]);
+  const { sendJsonMessage, lastMessage, readyState } = useWebSocket(socketUrl, {
+    shouldReconnect: (closeEvent) => {
+      // Auto reconnect unless closed normally
+      return closeEvent.code !== 1000;
+    },
+    reconnectAttempts: 5,
+    reconnectInterval: (attempt) =>
+      Math.min(1000 * Math.pow(2, attempt), 30000), // exponential backoff
+  });
 
-  const connect = () => {
+  // Handle incoming messages
+  React.useEffect(() => {
+    if (!lastMessage) return;
+
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
+      const data = JSON.parse(lastMessage.data);
 
-      // Fix: Append the JWT token as a query parameter for authentication
-      const wsUrl = `${WEBSOCKET_URL}?token=${token}`;
-      wsRef.current = new WebSocket(wsUrl);
+      switch (data.type) {
+        case 'message':
+          addMessage(data);
+          break;
 
-      wsRef.current.onopen = () => {
-        console.log('WebSocket connected');
-        setIsConnected(true);
-        setReconnectAttempts(0);
-      };
+        case 'read_receipt':
+          updateMessageStatus(data.message_id, data.conversation_id, 'read');
+          break;
 
-      wsRef.current.onclose = (event) => {
-        console.log('WebSocket disconnected', event.code, event.reason);
-        setIsConnected(false);
+        case 'typing_start':
+          setTypingStatus(data.conversation_id, data.user_id, true);
+          break;
 
-        // Only attempt reconnection if it wasn't a normal close
-        if (event.code !== 1000 && isAuthenticated && reconnectAttempts < maxReconnectAttempts) {
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
-          reconnectTimeoutRef.current = setTimeout(() => {
-            setReconnectAttempts(prev => prev + 1);
-            connect();
-          }, delay);
-        }
-      };
+        case 'typing_stop':
+          setTypingStatus(data.conversation_id, data.user_id, false);
+          break;
 
-      wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
+        case 'presence':
+          console.log('👤 Presence update:', data);
+          break;
 
-      wsRef.current.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          handleMessage(data);
-        } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
-        }
-      };
+        default:
+          console.log('ℹ️ Unknown WebSocket message type:', data.type);
+      }
     } catch (error) {
-      console.error('Failed to connect WebSocket:', error);
+      console.error('⚠️ Failed to parse WebSocket message:', error);
     }
-  };
+  }, [lastMessage,addMessage,updateMessageStatus,setTypingStatus]);
 
-  const disconnect = () => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.close(1000, 'User disconnected');
-    }
-
-    wsRef.current = null;
-    setIsConnected(false);
-    setReconnectAttempts(0);
-  };
-
-  const handleMessage = (data) => {
-    switch (data.type) {
-      case 'message':
-        addMessage(data);
-        break;
-
-      case 'read_receipt':
-        updateMessageStatus(data.message_id, data.conversation_id, 'read');
-        break;
-
-      case 'typing_start':
-        setTypingStatus(data.conversation_id, data.user_id, true);
-        break;
-
-      case 'typing_stop':
-        setTypingStatus(data.conversation_id, data.user_id, false);
-        break;
-
-      case 'presence':
-        // Handle user presence updates
-        console.log('User presence update:', data);
-        break;
-
-      default:
-        console.log('Unknown WebSocket message type:', data.type);
-    }
-  };
-
-  const sendMessage = (message) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(message));
-      return true;
-    }
-    return false;
-  };
-
+  // Send helpers
   const startTyping = (conversationId) => {
-    sendMessage({
-      type: 'typing_start',
-      conversation_id: conversationId
-    });
+    sendJsonMessage({ type: 'typing_start', conversation_id: conversationId });
   };
 
   const stopTyping = (conversationId) => {
-    sendMessage({
-      type: 'typing_stop',
-      conversation_id: conversationId
-    });
+    sendJsonMessage({ type: 'typing_stop', conversation_id: conversationId });
   };
 
   const value = {
-    isConnected,
-    sendMessage,
+    isConnected: readyState === ReadyState.OPEN,
+    sendMessage: sendJsonMessage,
     startTyping,
     stopTyping,
-    reconnectAttempts,
-    maxReconnectAttempts,
   };
 
   return (
