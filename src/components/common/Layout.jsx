@@ -15,7 +15,10 @@ const Layout = ({ children, requireAuth = true }) => {
   }
 
   if (requireAuth && !isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    setTimeout(() => {
+      return <Navigate to="/login" replace />;
+    }, 0); // Ensure this runs after render
+    
   }
 
   if (!requireAuth && isAuthenticated) {

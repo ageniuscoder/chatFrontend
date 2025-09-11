@@ -2,34 +2,57 @@ import React from 'react';
 import ConversationsList from './ConversationsList';
 import ChatWindow from './ChatWindow';
 import { useChat } from '../../contexts/ChatContext';
+import { MessageCircle } from 'lucide-react';
 
 const ChatLayout = () => {
   const { activeConversation } = useChat();
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Left Sidebar - Conversations */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        <ConversationsList />
-      </div>
+    <div className="flex h-screen bg-black text-gray-100 antialiased font-sans">
+      <div className="flex-1 flex border border-transparent rounded-lg relative overflow-hidden">
+        {/* Neon Border Effect */}
+        <div className="absolute inset-0 border border-blue-500 rounded-lg opacity-30 pointer-events-none animate-pulse-light z-0"></div>
 
-      {/* Right Panel - Chat Window */}
-      <div className="flex-1 flex flex-col">
-        {activeConversation ? (
-          <ChatWindow />
-        ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-50">
-            <div className="text-center text-gray-500">
-              <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+        {/* Left Sidebar - Conversations */}
+        <div className="w-80 bg-gray-900 border-r border-gray-800 flex flex-col p-3 z-10 relative">
+          {/* Top border glow */}
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 opacity-75"></div>
+          {/* Left border glow */}
+          <div className="absolute top-0 left-0 h-full w-0.5 bg-gradient-to-b from-purple-500 to-blue-500 opacity-75"></div>
+          {/* Bottom border glow */}
+          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 opacity-75"></div>
+          {/* Right border glow */}
+          <div className="absolute top-0 right-0 h-full w-0.5 bg-gradient-to-b from-purple-500 to-blue-500 opacity-75"></div>
+
+
+          <ConversationsList />
+        </div>
+
+        {/* Right Panel - Chat Window */}
+        <div className="flex-1 flex flex-col bg-gray-950 p-4 z-10 relative">
+          {/* Top border glow */}
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-500 to-teal-500 opacity-75"></div>
+          {/* Right border glow */}
+          <div className="absolute top-0 right-0 h-full w-0.5 bg-gradient-to-b from-green-500 to-teal-500 opacity-75"></div>
+          {/* Bottom border glow */}
+          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-500 to-teal-500 opacity-75"></div>
+          {/* Left border glow */}
+          <div className="absolute top-0 left-0 h-full w-0.5 bg-gradient-to-b from-green-500 to-teal-500 opacity-75"></div>
+
+
+          {activeConversation ? (
+            <ChatWindow />
+          ) : (
+            <div className="flex-1 flex items-center justify-center bg-gray-900 rounded-xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-black opacity-30 animate-pulse-slow"></div>
+              <div className="text-center text-gray-500 relative z-10">
+                <MessageCircle className="w-20 h-20 mx-auto mb-4 text-purple-600 drop-shadow-md animate-bounce-slow" />
+                <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-md">Select a conversation</h3>
+                <p className="text-base text-gray-400">Choose a conversation from the sidebar to start messaging.</p>
               </div>
-              <h3 className="text-lg font-medium mb-2">Select a conversation</h3>
-              <p className="text-sm">Choose a conversation from the sidebar to start messaging</p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -38,8 +38,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', result.data.token);
       const profileResult = await profileApi.execute();
       if (profileResult.success) setUser(profileResult.data);
+      return { success: true,data: profileResult.data}
+      
     }
-    return result;
+    return { success: false, message: result.error || 'Login failed' };
   };
 
   const signupInitiate = (userData) => signupInitiateApi.execute(userData);
@@ -60,7 +62,7 @@ export const AuthProvider = ({ children }) => {
     resetApi.execute({
       phone: resetData.phone,
       otp: resetData.otp,
-      new_password: resetData.newPassword,
+      new_password: resetData.new_password,
     });
 
   const updateProfile = async (profileData) => {

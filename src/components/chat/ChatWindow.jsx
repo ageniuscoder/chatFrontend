@@ -1,9 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-// This is the incorrect import
-
-import { Send, Phone, VideoIcon, MoreVertical } from 'lucide-react';
+import { Send, Phone, VideoIcon, MoreVertical, Paperclip, Smile, MessageCircle } from 'lucide-react';
 import { useChat } from '../../contexts/ChatContext.jsx';
-// This is the correct import
 import { useWebSocketContext } from '../../contexts/WebSocketContext.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import Avatar from '../common/Avatar';
@@ -31,17 +28,15 @@ const ChatWindow = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [conversationMessages]);
+  }, [conversationMessages, typingUsers]); // Scroll when messages or typing status changes
 
   useEffect(() => {
-    // Mark messages as read when conversation becomes active
     if (activeConversation && conversationMessages.length > 0) {
       const unreadMessageIds = conversationMessages
         .filter(msg => msg.sender_id !== user.id && msg.status !== 'read')
         .map(msg => msg.id);
       
       if (unreadMessageIds.length > 0) {
-        // Fix: Send all unread message IDs to the markAsRead function
         markAsRead(activeConversation.id, unreadMessageIds);
       }
     }
@@ -70,16 +65,13 @@ const ChatWindow = () => {
   const handleInputChange = (e) => {
     setMessage(e.target.value);
     
-    // Handle typing indicators
     if (activeConversation) {
       startTyping(activeConversation.id);
       
-      // Clear existing timeout
       if (typingTimeout) {
         clearTimeout(typingTimeout);
       }
       
-      // Set new timeout to stop typing
       const timeout = setTimeout(() => {
         stopTyping(activeConversation.id);
       }, 2000);
@@ -93,25 +85,25 @@ const ChatWindow = () => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-900 rounded-xl shadow-lg shadow-green-900/30 relative overflow-hidden">
       {/* Chat Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-between p-3 border-b border-gray-800 bg-gray-800/80 backdrop-blur-sm relative z-10 shadow-md shadow-green-900/20">
         <div className="flex items-center space-x-3">
           <Avatar
             src={activeConversation.avatar}
             alt={activeConversation.name}
-            size="md"
+            size="md" // Smaller size
             online={activeConversation.is_online}
           />
           <div>
-            <h2 className="font-semibold text-gray-900">{activeConversation.name}</h2>
-            <div className="text-sm text-gray-500">
+            <h2 className="font-extrabold text-white text-lg drop-shadow-md">{activeConversation.name}</h2>
+            <div className="text-sm text-gray-400">
               {conversationTypingUsers.length > 0 ? (
                 <TypingIndicator users={conversationTypingUsers} />
               ) : activeConversation.is_group ? (
                 `${activeConversation.participant_count || 2} members`
               ) : activeConversation.is_online ? (
-                'online'
+                <span className="text-green-400">online</span>
               ) : (
                 formatLastSeen(activeConversation.last_seen)
               )}
@@ -119,24 +111,26 @@ const ChatWindow = () => {
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+        {/* Updated Button Group */}
+        <div className="flex items-center space-x-1">
+          <button className="p-2 rounded-full text-green-400 hover:bg-gray-700 hover:text-green-300 transition-all duration-300 transform hover:scale-110">
             <Phone className="w-5 h-5" />
           </button>
-          <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          <button className="p-2 rounded-full text-teal-400 hover:bg-gray-700 hover:text-teal-300 transition-all duration-300 transform hover:scale-110">
             <VideoIcon className="w-5 h-5" />
           </button>
-          <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          <button className="p-2 rounded-full text-gray-400 hover:bg-gray-700 hover:text-gray-300 transition-all duration-300 transform hover:scale-110">
             <MoreVertical className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto custom-scrollbar-dark p-4 space-y-3 relative">
         {conversationMessages.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <p>No messages yet. Start the conversation!</p>
+          <div className="text-center py-8 text-gray-600">
+            <p className="text-base font-semibold text-gray-300">No messages yet. Start the conversation!</p>
+            <MessageCircle className="w-16 h-16 mx-auto mt-4 text-green-600 opacity-50 animate-pulse-slow" />
           </div>
         ) : (
           conversationMessages.map((msg, index) => (
@@ -159,27 +153,34 @@ const ChatWindow = () => {
       </div>
 
       {/* Message Input */}
-      <div className="p-4 border-t border-gray-200 bg-white">
+      <div className="p-4 border-t border-gray-800 bg-gray-800/80 backdrop-blur-sm relative z-10 shadow-lg shadow-green-900/20">
         <div className="flex items-end space-x-3">
-          <div className="flex-1">
+          <button className="p-2 bg-gray-700/60 text-gray-300 rounded-full hover:bg-gray-700 hover:text-green-400 transition-all duration-300 shadow-md shadow-gray-900/40">
+            <Paperclip className="w-5 h-5" />
+          </button>
+          <div className="flex-1 relative">
             <textarea
               ref={inputRef}
               value={message}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              placeholder="Type a message..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
+              placeholder="Type your message..."
+              className="w-full pl-4 pr-10 py-2 bg-gray-700 border border-transparent rounded-3xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-white placeholder-gray-400 text-sm resize-none transition-all duration-300 shadow-inner shadow-gray-900/60 custom-scrollbar-dark"
               rows="1"
               style={{
-                minHeight: '50px',
-                maxHeight: '120px'
+                minHeight: '40px',
+                maxHeight: '120px',
+                overflowY: 'auto'
               }}
             />
+            <button className="absolute right-2 bottom-2 p-1 text-gray-400 hover:text-yellow-400 transition-colors duration-300">
+              <Smile className="w-5 h-5" />
+            </button>
           </div>
           <button
             onClick={handleSend}
             disabled={!message.trim()}
-            className="p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="p-3 bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-full hover:from-green-600 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-800/40"
           >
             <Send className="w-5 h-5" />
           </button>

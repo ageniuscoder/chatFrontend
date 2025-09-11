@@ -13,61 +13,55 @@ const MessageBubble = ({ message, isOwn, showAvatar, showTime }) => {
       case 'delivered':
         return <CheckCheck className="w-3 h-3 text-gray-400" />;
       case 'read':
-        return <CheckCheck className="w-3 h-3 text-blue-500" />;
+        return <CheckCheck className="w-3 h-3 text-purple-300" />;
       default:
         return null;
     }
   };
 
+  const bubbleClasses = isOwn
+    ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white rounded-br-none shadow-lg shadow-blue-800/30'
+    : 'bg-gray-700 text-gray-100 rounded-bl-none shadow-lg shadow-gray-900/30';
+  
+  // Conditionally add a bottom margin to space out the blocks of messages
+  const messageBlockMargin = showAvatar ? 'mb-2' : '';
+
   return (
-    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-2`}>
-      <div className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${isOwn ? 'flex-row-reverse space-x-reverse' : ''}`}>
-        {/* Avatar */}
-        {showAvatar && !isOwn && (
-          <Avatar
-            src={message.sender_avatar}
-            alt={message.sender_username}
-            size="sm"
-            className="flex-shrink-0"
-          />
-        )}
-        {isOwn && <div className="w-8" />} {/* Spacer for own messages */}
-
-        {/* Message Bubble */}
-        <div className={`relative px-4 py-2 rounded-2xl ${
-          isOwn 
-            ? 'bg-blue-500 text-white' 
-            : 'bg-white text-gray-900 border border-gray-200'
-        }`}>
-          {/* Sender name for group chats */}
-          {/* Fix: Use message.sender_username as the API provides this */}
-          {!isOwn && message.sender_username && (
-            <div className="text-xs text-blue-500 font-medium mb-1">
-              {message.sender_username}
-            </div>
+    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} items-end mb-1.5 ${messageBlockMargin}`}>
+      {/* Container for Avatar or Spacer */}
+      {!isOwn ? (
+        <div className="flex-shrink-0" style={{ width: '1.5rem', height: '1.5rem', marginRight: '0.5rem' }}>
+          {showAvatar && (
+            <Avatar
+              src={message.sender_avatar}
+              alt={message.sender_username}
+              size="sm"
+            />
           )}
-          
-          {/* Message content */}
-          <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-            {message.content}
-          </div>
-          
-          {/* Time and status */}
-          <div className={`flex items-center justify-end space-x-1 mt-1 ${
-            isOwn ? 'text-blue-100' : 'text-gray-400'
-          }`}>
-            <span className="text-xs">
-              {formatMessageTime(message.sent_at)}
-            </span>
-            {isOwn && getStatusIcon()}
-          </div>
-
-          {/* Message tail */}
-          <div className={`absolute bottom-0 w-3 h-3 ${
-            isOwn 
-              ? 'right-0 translate-x-1 bg-blue-500' 
-              : 'left-0 -translate-x-1 bg-white border-l border-b border-gray-200'
-          } transform rotate-45`} />
+        </div>
+      ) : (
+        // Spacer for sent messages to maintain alignment
+        showAvatar && <div className="w-6 flex-shrink-0 mr-1" />
+      )}
+      
+      {/* Message Bubble and Neon Glow */}
+      <div className={`relative px-4 py-2 rounded-2xl max-w-[65%] lg:max-w-[50%] break-words whitespace-pre-wrap ${bubbleClasses}`}>
+        {/* Sender name for group chats */}
+        {!isOwn && message.sender_username && showAvatar && (
+          <div className="text-xs font-bold mb-0.5 text-purple-300 drop-shadow-sm">{message.sender_username}</div>
+        )}
+        
+        {/* Message content */}
+        <div className="text-sm leading-relaxed break-words">
+          {message.content}
+        </div>
+        
+        {/* Time and status */}
+        <div className={`flex items-center justify-end space-x-1 mt-0.5 text-xs opacity-80 ${isOwn ? 'text-blue-100' : 'text-gray-400'}`}>
+          <span>
+            {formatMessageTime(message.sent_at)}
+          </span>
+          {isOwn && getStatusIcon()}
         </div>
       </div>
     </div>
