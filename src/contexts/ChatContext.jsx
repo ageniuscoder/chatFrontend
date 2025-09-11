@@ -20,6 +20,7 @@ export const ChatProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [typingUsers, setTypingUsers] = useState({});
   const { user } = useAuth();
+  const PAGE_SIZE = 50;
 
   useEffect(() => {
     fetchConversations();
@@ -28,50 +29,52 @@ export const ChatProvider = ({ children }) => {
   const fetchConversations = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await conversationAPI.getConversations();
       setConversations(response.data.conversations);
     } catch (error) {
-      setError('Failed to fetch conversations');
+      setError('Failed to fetch conversations',error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchMessages = async (conversationId, page = 1) => {
-    try {
-      const response = await conversationAPI.getMessages(conversationId, {
-        page,
-        limit: 50
+const fetchMessages = async (conversationId, page = 1) => {
+  try {
+    const response = await conversationAPI.getMessages(conversationId, {
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE
+    });
+
+    const apiMessages = response.data.messages || [];
+    const conversationMessages = [...apiMessages].reverse(); // safer: copy then reverse
+
+    if (page === 1) {
+      setMessages(prev => ({ ...prev, [conversationId]: conversationMessages }));
+    } else {
+      setMessages(prev => {
+        const existing = prev[conversationId] || [];
+        // simple dedupe by id
+        const merged = [
+          ...conversationMessages,
+          ...existing.filter(m => !conversationMessages.some(n => n.id === m.id))
+        ];
+        return { ...prev, [conversationId]: merged };
       });
-
-      const conversationMessages = response.data.messages || [];
-
-      if (page === 1) {
-        setMessages(prev => ({
-          ...prev,
-          [conversationId]: conversationMessages
-        }));
-      } else {
-        setMessages(prev => ({
-          ...prev,
-          [conversationId]: [
-            ...conversationMessages,
-            ...(prev[conversationId] || [])
-          ]
-        }));
-      }
-
-      return response.data;
-    } catch (error) {
-      setError('Failed to fetch messages');
-      return null;
     }
-  };
+
+    return response.data;
+  } catch (err) {
+    console.error('Failed to fetch messages', err);
+    setError(`Failed to fetch messages: ${err.message || err}`);
+    return null;
+  }
+};
 
   const sendMessage = async (conversationId, content) => {
+    const tempId = Date.now();
+    const now = new Date().toISOString();
     try {
-      const tempId = Date.now();
-      const now = new Date().toISOString();
       const tempMessage = {
         id: tempId,
         conversation_id: conversationId,
@@ -142,6 +145,7 @@ export const ChatProvider = ({ children }) => {
 
       return newConversation;
     } catch (error) {
+      console.log(error)
       setError('Failed to create conversation');
       return null;
     }
@@ -155,6 +159,7 @@ export const ChatProvider = ({ children }) => {
   };
 
   const addMessage = (message) => {
+    let added=false;
     setMessages(prev => {
       const existingMessages = prev[message.conversation_id] || [];
       // FIX: Check for duplicate only by ID, not by content
@@ -165,6 +170,7 @@ export const ChatProvider = ({ children }) => {
       if (isDuplicate) {
         return prev;
       }
+      added=true;
 
       return {
         ...prev,
@@ -176,11 +182,13 @@ export const ChatProvider = ({ children }) => {
     });
 
     // Update conversation last message
-    setConversations(prev => prev.map(conv =>
-      conv.id === message.conversation_id
-        ? { ...conv, last_message: message }
-        : conv
-    ));
+    if(added){
+      setConversations(prev => prev.map(conv =>
+        conv.id === message.conversation_id
+          ? { ...conv, last_message: message }
+          : conv
+      ));
+    }
   };
 
   const updateMessageStatus = (messageId, conversationId, status) => {
@@ -193,22 +201,33 @@ export const ChatProvider = ({ children }) => {
   };
 
   const setTypingStatus = (conversationId, userId, isTyping) => {
-    setTypingUsers(prev => {
-      const conversationTyping = prev[conversationId] || {};
-      if (isTyping) {
-        return {
-          ...prev,
-          [conversationId]: { ...conversationTyping, [userId]: true }
-        };
-      } else {
-        const { [userId]: removed, ...rest } = conversationTyping;
-        return {
-          ...prev,
-          [conversationId]: rest
-        };
+  setTypingUsers(prev => {
+    const conversationTyping = prev[conversationId] || {};
+
+    if (isTyping) {
+      // Add user as typing
+      return {
+        ...prev,
+        [conversationId]: { ...conversationTyping, [userId]: true }
+      };
+    } else {
+      // Remove user from typing map
+      const { [userId]: _, ...rest } = conversationTyping;
+
+      if (Object.keys(rest).length === 0) {
+        // No one left typing → remove whole conversation entry
+        const { [conversationId]: __, ...remaining } = prev;
+        return remaining;
       }
-    });
-  };
+
+      return {
+        ...prev,
+        [conversationId]: rest
+      };
+    }
+  });
+};
+
 
   const value = {
     conversations,

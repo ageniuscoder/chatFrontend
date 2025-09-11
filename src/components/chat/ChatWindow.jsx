@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+// This is the incorrect import
+
 import { Send, Phone, VideoIcon, MoreVertical } from 'lucide-react';
 import { useChat } from '../../contexts/ChatContext.jsx';
-import { useWebSocket } from '../../contexts/WebSocketContext.jsx';
+// This is the correct import
+import { useWebSocketContext } from '../../contexts/WebSocketContext.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import Avatar from '../common/Avatar';
 import MessageBubble from './MessageBubble';
@@ -21,7 +24,7 @@ const ChatWindow = () => {
     markAsRead,
     typingUsers 
   } = useChat();
-  const { startTyping, stopTyping } = useWebSocket();
+  const { startTyping, stopTyping } = useWebSocketContext();
 
   const conversationMessages = messages[activeConversation?.id] || [];
   const conversationTypingUsers = Object.keys(typingUsers[activeConversation?.id] || {});

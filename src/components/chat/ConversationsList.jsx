@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Search, Plus, Settings, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useChat } from '../../contexts/ChatContext.jsx';
-import { useWebSocket } from '../../contexts/WebSocketContext.jsx';
+// This is the correct import
+import { useWebSocketContext } from '../../contexts/WebSocketContext.jsx';
 import Avatar from '../common/Avatar';
 import { formatMessageTime } from '../../utils/dateUtils';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +13,7 @@ const ConversationsList = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, logout } = useAuth();
   const { conversations, selectConversation, activeConversation, loading } = useChat();
-  const { isConnected } = useWebSocket();
+  const { isConnected } = useWebSocketContext();
   const navigate = useNavigate();
 
   const filteredConversations = Array.isArray(conversations) ? conversations.filter(conv =>
