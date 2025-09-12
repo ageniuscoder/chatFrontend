@@ -156,7 +156,7 @@ const ConversationsList = () => {
                     </h3>
                     {conversation.last_message && (
                       <span className="text-xs text-gray-400 flex-shrink-0 group-hover:text-blue-300">
-                        {formatMessageTime(conversation.last_message.created_at)}
+                        {formatMessageTime(conversation.last_message?.created_at)}
                       </span>
                     )}
                   </div>
