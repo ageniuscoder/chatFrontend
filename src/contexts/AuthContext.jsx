@@ -58,12 +58,14 @@ export const AuthProvider = ({ children }) => {
 
   const forgotPassword = (phone) => forgotApi.execute({ phone });
 
-  const resetPassword = (resetData) =>
-    resetApi.execute({
+  const resetPassword = async (resetData) => {
+    const result = await resetApi.execute({
       phone: resetData.phone,
       otp: resetData.otp,
       new_password: resetData.new_password,
     });
+    return result; // Explicitly return the result with success/error properties
+  };
 
   const updateProfile = async (profileData) => {
     const result = await updateProfileApi.execute(profileData);

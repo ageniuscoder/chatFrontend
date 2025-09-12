@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { MessageCircle, Eye, EyeOff, User, Lock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Loading from '../common/Loading';
+import { toast } from 'react-toastify';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -11,7 +12,6 @@ const LoginPage = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const { login, loading } = useAuth();
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -23,7 +23,6 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // ✅ stop refresh
-    setError(null);
 
     try {
       const result = await login(formData.username.trim(), formData.password);
@@ -31,12 +30,12 @@ const LoginPage = () => {
       if (result?.success) {
         navigate('/chat', { replace: true }); // ✅ prevents extra refresh
       } else {
-        setError(result?.message || 'Invalid username or password.');
+        toast.error(result?.error || 'Invalid username or password.');
         setFormData(prev => ({ ...prev, password: '' }));
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Something went wrong. Please try again later.');
+      toast.error('Something went wrong. Please try again later.');
     }
   };
 
@@ -114,12 +113,6 @@ const LoginPage = () => {
             </button>
           </div>
 
-          {/* Error */}
-          {error && (
-            <div className="bg-red-900 bg-opacity-30 border border-red-700 rounded-xl p-4">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
 
           {/* Submit */}
           <button

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { MessageCircle, ArrowLeft, Eye, EyeOff, Smartphone, Lock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Loading from '../common/Loading';
+import { toast } from 'react-toastify';
 
 const ForgotPasswordPage = () => {
   const [step, setStep] = useState(() => {
@@ -27,7 +28,7 @@ const ForgotPasswordPage = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { forgotPassword, resetPassword, loading, error, setError } = useAuth();
+  const { forgotPassword, resetPassword, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,6 +47,11 @@ const ForgotPasswordPage = () => {
 
   const handleStep1Submit = async (e) => {
     e.preventDefault();
+    if(formData.phone.trim().length < 10){
+      toast.error("Please enter a valid phone number.");
+      setFormData((prev) => ({ ...prev, phone: '' }));
+      return;
+    }
     console.log("[FLOW] handleStep1Submit called.");
     const result = await forgotPassword(formData.phone);
     console.log("[API] forgotPassword API response:", result);
@@ -54,10 +60,8 @@ const ForgotPasswordPage = () => {
       console.log("[FLOW] API call succeeded. Calling setStep(2)...");
       setStep(2);
       localStorage.setItem("forgotPasswordStep", "2"); // 🔥 sync localStorage immediately
-      if (typeof setError === 'function') {
-        setError(null);
-      }
     } else {
+      toast.error(result.error || "Failed to send reset code. Please try again.");
       console.log("[FLOW] API call failed.");
     }
   };
@@ -67,12 +71,12 @@ const ForgotPasswordPage = () => {
     console.log("[FLOW] handleStep2Submit called.");
 
     if (formData.new_password !== formData.confirm_password) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     if (formData.new_password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      toast.error('Password must be at least 6 characters long');
       return;
     }
 
@@ -86,7 +90,17 @@ const ForgotPasswordPage = () => {
       console.log("[FLOW] Password reset successful. Clearing localStorage and navigating.");
       localStorage.removeItem("forgotPasswordStep");
       localStorage.removeItem("forgotPasswordData");
+      toast.success("Password reset successful! Please log in with your new password.");
       navigate('/login');
+    }else{
+      console.log("[FLOW] Password reset failed. Staying on step 2.");
+      toast.error(result.error || "Failed to reset password. Please try again.");
+      setFormData(prev => ({
+          ...prev,
+          otp: '',
+          new_password: '',
+          confirm_password: ''
+      }));
     }
   };
 
@@ -152,12 +166,6 @@ const ForgotPasswordPage = () => {
                 />
               </div>
 
-              {error && (
-                <div className="bg-red-900 bg-opacity-30 border border-red-700 rounded-xl p-4">
-                  <p className="text-red-400 text-sm">{error}</p>
-                </div>
-              )}
-
               <button
                 type="submit"
                 disabled={loading}
@@ -174,6 +182,9 @@ const ForgotPasswordPage = () => {
               </div>
 
               <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  <MessageCircle size={20} />
+                </span>
                 <input
                   type="text"
                   id="otp"
@@ -181,8 +192,8 @@ const ForgotPasswordPage = () => {
                   value={formData.otp}
                   onChange={handleChange}
                   maxLength={6}
-                  className="w-full py-4 bg-gray-800 bg-opacity-50 text-white rounded-xl text-center text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-gray-400 border border-gray-700 hover:border-blue-500"
-                  placeholder="------"
+                  className="w-full pl-12 pr-12 py-3 bg-gray-800 bg-opacity-50 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-gray-400 border border-gray-700 hover:border-blue-500 hide-password-toggle"
+                  placeholder="Enter 6-digit code"
                   required
                 />
               </div>
@@ -233,12 +244,6 @@ const ForgotPasswordPage = () => {
                   {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-
-              {error && (
-                <div className="bg-red-900 bg-opacity-30 border border-red-700 rounded-xl p-4">
-                  <p className="text-red-400 text-sm">{error}</p>
-                </div>
-              )}
 
               <button
                 type="submit"

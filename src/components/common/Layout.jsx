@@ -14,17 +14,17 @@ const Layout = ({ children, requireAuth = true }) => {
     );
   }
 
+  // If a protected page requires authentication, but the user is not authenticated, redirect to login.
   if (requireAuth && !isAuthenticated) {
-    setTimeout(() => {
-      return <Navigate to="/login" replace />;
-    }, 0); // Ensure this runs after render
-    
+    return <Navigate to="/login" replace />;
   }
 
+  // If a public page is being accessed by an authenticated user, redirect to chat.
   if (!requireAuth && isAuthenticated) {
     return <Navigate to="/chat" replace />;
   }
-
+  
+  // For any other case (public page and not authenticated), render the child component.
   return <div className="min-h-screen bg-gray-50">{children}</div>;
 };
 

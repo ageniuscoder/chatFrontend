@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowLeft, User, Smartphone, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Loading from '../common/Loading';
+import { toast } from 'react-toastify';
 
 const SignupPage = () => {
   const [step, setStep] = useState(() => Number(localStorage.getItem("signupStep") || 1));
@@ -23,7 +24,7 @@ const SignupPage = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { signupInitiate, signupVerify, loading, error, setError } = useAuth();
+  const { signupInitiate, signupVerify, loading } = useAuth();
   const navigate = useNavigate();
   const otpRefs = useRef([]);
 
@@ -43,12 +44,12 @@ const SignupPage = () => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      toast.error('Password must be at least 6 characters long');
       return;
     }
 
@@ -62,7 +63,8 @@ const SignupPage = () => {
       setStep(2);
       localStorage.setItem("signupStep", "2");
       localStorage.setItem("signupData", JSON.stringify(formData));
-      setError(null);
+    } else {
+      toast.error(result.error);
     }
   };
 
@@ -71,7 +73,7 @@ const SignupPage = () => {
 
     const otp = formData.otp.trim();
     if (otp.length !== 6) {
-      setError('Please enter a valid 6-digit code');
+      toast.error('Please enter a valid 6-digit OTP');
       return;
     }
 
@@ -86,6 +88,12 @@ const SignupPage = () => {
       localStorage.removeItem("signupStep");
       localStorage.removeItem("signupData");
       navigate('/chat');
+    } else {
+      if (Array.isArray(result.error)) {
+        result.error.forEach(err => toast.error(err.message));
+      } else {
+        toast.error(result.error);
+      }
     }
   };
 
@@ -208,12 +216,6 @@ const SignupPage = () => {
                 </button>
               </div>
 
-              {error && (
-                <div className="bg-red-900 bg-opacity-30 border border-red-700 rounded-xl p-4">
-                  <p className="text-red-400 text-sm">{error}</p>
-                </div>
-              )}
-
               <button
                 type="submit"
                 disabled={loading}
@@ -242,20 +244,6 @@ const SignupPage = () => {
                   required
                 />
               </div>
-
-              {error && (
-                <div className="bg-red-900 bg-opacity-30 border border-red-700 rounded-xl p-4">
-                  {Array.isArray(error) ? (
-                    <ul className="list-disc list-inside space-y-1 text-red-400 text-sm">
-                      {error.map((err, index) => (
-                        <li key={index}>{err.message}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-red-400 text-sm">{error}</p>
-                  )}
-                </div>
-              )}
 
               <button
                 type="submit"
