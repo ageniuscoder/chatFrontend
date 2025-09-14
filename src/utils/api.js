@@ -62,6 +62,7 @@ export const conversationAPI = {
   addParticipant: (conversationId, data) => api.post(`/conversations/${conversationId}/participants`, data),
   removeParticipant: (conversationId, userId) => api.delete(`/conversations/${conversationId}/participants/${userId}`),
   getMessages: (conversationId, params) => api.get(`/conversations/${conversationId}/messages`, { params }),
+  getParticipants: (conversationId) => api.get(`/conversations/${conversationId}/participants`),
 };
 
 // Message API calls

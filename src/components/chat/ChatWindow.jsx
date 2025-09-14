@@ -7,10 +7,12 @@ import Avatar from '../common/Avatar';
 import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
 import { formatLastSeen } from '../../utils/dateUtils';
+import GroupMembersModal from './GroupMembersModal.jsx';
 
 const ChatWindow = () => {
   const [message, setMessage] = useState('');
   const [typingTimeout, setTypingTimeout] = useState(null);
+  const [showMembersModal, setShowMembersModal] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const { user } = useAuth();
@@ -41,6 +43,11 @@ const ChatWindow = () => {
       }
     }
   }, [activeConversation, conversationMessages, user]);
+
+  // FIX: This useEffect hook will close the modal whenever the conversation changes, regardless of its type.
+  useEffect(() => {
+    setShowMembersModal(false);
+  }, [activeConversation]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -85,6 +92,7 @@ const ChatWindow = () => {
   }
 
   return (
+    <>
     <div className="flex flex-col h-full bg-gray-900 rounded-xl shadow-lg shadow-green-900/30 relative overflow-hidden">
       {/* Chat Header */}
       <div className="flex items-center justify-between p-3 border-b border-gray-800 bg-gray-800/80 backdrop-blur-sm relative z-10 shadow-md shadow-green-900/20">
@@ -96,7 +104,12 @@ const ChatWindow = () => {
             online={activeConversation.is_online}
           />
           <div>
-            <h2 className="font-extrabold text-white text-lg drop-shadow-md">{activeConversation.name}</h2>
+            <div
+              onClick={() => activeConversation.is_group && setShowMembersModal(true)}
+              className={`cursor-${activeConversation.is_group ? 'pointer' : 'default'}`}
+            >
+              <h2 className="font-extrabold text-white text-lg drop-shadow-md">{activeConversation.name}</h2>
+            </div>
             <div className="text-sm text-gray-400">
               {conversationTypingUsers.length > 0 ? (
                 <TypingIndicator users={conversationTypingUsers} />
@@ -187,6 +200,13 @@ const ChatWindow = () => {
         </div>
       </div>
     </div>
+    <GroupMembersModal
+      isOpen={showMembersModal}
+      onClose={() => setShowMembersModal(false)}
+      conversation={activeConversation}
+    />
+    </>
+    
   );
 };
 
