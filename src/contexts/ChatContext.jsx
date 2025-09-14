@@ -130,12 +130,19 @@ export const ChatProvider = ({ children }) => {
         message_ids: messageIds
       });
 
+      // Update message status in the messages state
       setMessages(prev => ({
         ...prev,
         [conversationId]: prev[conversationId]?.map(msg =>
           messageIds.includes(msg.id) ? { ...msg, status: 'read' } : msg
         ) || []
       }));
+
+      // Immediately reset the unread count for the conversation
+      setConversations(prev => prev.map(conv =>
+        conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
+      ));
+
     } catch (error) {
       console.error('Failed to mark messages as read:', error);
     }
