@@ -48,9 +48,12 @@ export const authAPI = {
 export const userAPI = {
   getProfile: () => api.get('/me'),
   updateProfile: (data) => api.put('/me', data),
-  getLastSeen: (userId) => api.get(`/users/${userId}/last-seen`),
 };
 
+export const featureAPI = {
+  getLastSeen: (userId) => api.get(`/users/${userId}/last-seen`),
+  searchUsers: (query) => api.get(`/users/search?q=${query}`), // Add this line
+}
 // Conversation API calls
 export const conversationAPI = {
   getConversations: () => api.get('/conversations'),
