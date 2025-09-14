@@ -6,10 +6,12 @@ import { useWebSocketContext } from '../../contexts/WebSocketContext.jsx';
 import Avatar from '../common/Avatar';
 import { formatMessageTime } from '../../utils/dateUtils';
 import { useNavigate } from 'react-router-dom';
+import CreateChatModal from './CreateChatModal';
 
 const ConversationsList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
+   const [showCreateChatModal, setShowCreateChatModal] = useState(false); // Add this state
   const { user, logout } = useAuth();
   const { conversations, selectConversation, activeConversation, loading } = useChat();
   const { isConnected } = useWebSocketContext();
@@ -97,7 +99,9 @@ const ConversationsList = () => {
             className="w-full pl-10 pr-10 py-2 bg-gray-700 border border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-gray-400 text-sm transition-all duration-300 shadow-inner shadow-gray-900/50"
           />
           {/* Plus icon inside the search bar */}
-          <button className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 bg-purple-700/50 text-white rounded-full hover:bg-purple-600 transition-all duration-300 transform hover:scale-110 shadow-lg shadow-purple-800/40">
+          <button 
+          onClick={() => setShowCreateChatModal(true)}
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 bg-purple-700/50 text-white rounded-full hover:bg-purple-600 transition-all duration-300 transform hover:scale-110 shadow-lg shadow-purple-800/40">
             <Plus className="w-4 h-4" />
           </button>
         </div>
@@ -176,6 +180,8 @@ const ConversationsList = () => {
           ))
         )}
       </div>
+      {/* Add the modal component here */}
+      <CreateChatModal isOpen={showCreateChatModal} onClose={() => setShowCreateChatModal(false)} />
     </>
   );
 };

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { conversationAPI, messageAPI } from '../utils/api';
+import { conversationAPI, messageAPI, featureAPI } from '../utils/api';
 import { useAuth } from './AuthContext';
 
 const ChatContext = createContext();
@@ -32,8 +32,10 @@ export const ChatProvider = ({ children }) => {
       setError(null);
       const response = await conversationAPI.getConversations();
       setConversations(response.data.conversations);
+      return response.data.conversations;
     } catch (error) {
       setError('Failed to fetch conversations', error);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -139,21 +141,54 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  const createPrivateChat = async (userId) => {
+ const createPrivateChat = async (userId) => {
     try {
-      const response = await conversationAPI.createPrivateChat({ user_id: userId });
-      const newConversation = response.data;
+        const response = await conversationAPI.createPrivateChat({ other_user_id: userId });
+        const newConversationId = response.data.conversation_id;
 
-      setConversations(prev => [newConversation, ...prev]);
-      setActiveConversation(newConversation);
+        // Fetch the updated list of conversations and get the newly created one.
+        // We get the conversations directly from the function's return value,
+        // which guarantees we're working with the most up-to-date data.
+        const updatedConversations = await fetchConversations(); 
 
-      return newConversation;
+        const newConversation = updatedConversations.find(conv => conv.id === newConversationId);
+
+        if (newConversation) {
+            // Set the active conversation to the newly created one.
+            setActiveConversation(newConversation);
+            return newConversation; // Return the new conversation object.
+        }
+
+        // If for some reason the conversation wasn't found,
+        // it's a failure.
+        setError('Failed to find the new conversation');
+        return null;
     } catch (error) {
-      console.log(error)
-      setError('Failed to create conversation');
+        console.error('Failed to create conversation', error);
+        setError('Failed to create conversation');
+        return null;
+    }
+};
+
+
+  const createGroupChat = async (groupData) => {
+    try {
+      const response = await conversationAPI.createGroupChat(groupData);
+      const newConversationId= response.data.conversation_id;
+      const updatedConversations=await fetchConversations();
+      const newConversation = updatedConversations.find(conv => conv.id === newConversationId);
+      if (newConversation) {
+        // Now you are sure newConversation is not undefined
+        // setConversations is already handled by fetchConversations, so we only need to set the active one
+        setActiveConversation(newConversation);
+      }
+    } catch (error) {
+      console.error(error);
+      setError('Failed to create group');
       return null;
     }
-  };
+  }
+
 
   const selectConversation = async (conversation) => {
     setActiveConversation(conversation);
@@ -258,6 +293,7 @@ export const ChatProvider = ({ children }) => {
     sendMessage,
     markAsRead,
     createPrivateChat,
+    createGroupChat, // Add this line
     selectConversation,
     addMessage,
     updateMessageStatus,
