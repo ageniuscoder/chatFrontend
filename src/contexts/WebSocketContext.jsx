@@ -16,7 +16,7 @@ export const useWebSocketContext = () => {
 
 export const WebSocketProvider = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  const { addMessage, updateMessageStatus, setTypingStatus } = useChat();
+  const { addMessage, updateMessageStatus, setTypingStatus, updatePresenceStatus } = useChat();
 
   const token = isAuthenticated ? localStorage.getItem('token') : null;
   const socketUrl = token ? `${WEBSOCKET_URL}?token=${token}` : null;
@@ -51,6 +51,7 @@ export const WebSocketProvider = ({ children }) => {
           case 'presence':
             console.log('👤 Presence update:', data);
             // You may want to add a state update here for presence
+            updatePresenceStatus(data.sender_id,data.content, data.last_active);
             break;
 
           default:
