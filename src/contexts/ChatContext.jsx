@@ -240,11 +240,22 @@ export const ChatProvider = ({ children }) => {
     });
 
     // Update conversation last message
-    setConversations(prev => prev.map(conv =>
-      conv.id === message.conversation_id
-        ? { ...conv, last_message: message }
-        : conv
-    ));
+    // Update conversations list in a separate pass which correctly increaments unread count in realTime
+    setConversations(prev => {
+        return prev.map(conv => {
+            if (conv.id === message.conversation_id) {
+                // Check if the message is from another user and the conversation is not active
+                const isNewUnread = message.sender_id !== user.id && (!activeConversation || activeConversation.id !== message.conversation_id);
+                return {
+                    ...conv,
+                    last_message: message,
+                    // Increment unread count only for new, unread messages
+                    unread_count: conv.unread_count + (isNewUnread ? 1 : 0)
+                };
+            }
+            return conv;
+        });
+    });
   };
 
   const updateMessageStatus = (messageId, conversationId, status) => {
