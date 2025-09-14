@@ -299,6 +299,34 @@ export const ChatProvider = ({ children }) => {
     });
   };
 
+
+// for marking lastSeen and online
+  const updatePresenceStatus = (userId, status, lastSeenTimestamp) => {
+    const isOnline = status === 'online'; // Derive the boolean flag from the status string
+    
+    setConversations(prev => prev.map(conv => {
+      if (!conv.is_group && conv.other_user_id === userId) {
+        return {
+          ...conv,
+          last_seen: lastSeenTimestamp,
+          is_online: isOnline, // FIX: Update the online status here
+        };
+      }
+      return conv;
+    }));
+
+    setActiveConversation(prev => {
+      if (prev && !prev.is_group && prev.other_user_id === userId) {
+        return {
+          ...prev,
+          last_seen: lastSeenTimestamp,
+          is_online: isOnline, // FIX: Update the online status here
+        };
+      }
+      return prev;
+    });
+  };
+
   const value = {
     conversations,
     activeConversation,
@@ -316,6 +344,7 @@ export const ChatProvider = ({ children }) => {
     addMessage,
     updateMessageStatus,
     setTypingStatus,
+    updatePresenceStatus,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
