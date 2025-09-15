@@ -148,26 +148,22 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
- const createPrivateChat = async (userId) => {
+ // Updated createPrivateChat function
+const createPrivateChat = async (userId) => {
     try {
         const response = await conversationAPI.createPrivateChat({ other_user_id: userId });
         const newConversationId = response.data.conversation_id;
 
-        // Fetch the updated list of conversations and get the newly created one.
-        // We get the conversations directly from the function's return value,
-        // which guarantees we're working with the most up-to-date data.
-        const updatedConversations = await fetchConversations(); 
+        // Fetch all conversations again to get the new one
+        const updatedConversations = await fetchConversations();
 
+        // Find and set the newly created conversation as active
         const newConversation = updatedConversations.find(conv => conv.id === newConversationId);
-
         if (newConversation) {
-            // Set the active conversation to the newly created one.
             setActiveConversation(newConversation);
-            return newConversation; // Return the new conversation object.
+            return newConversation;
         }
 
-        // If for some reason the conversation wasn't found,
-        // it's a failure.
         setError('Failed to find the new conversation');
         return null;
     } catch (error) {
@@ -178,23 +174,27 @@ export const ChatProvider = ({ children }) => {
 };
 
 
-  const createGroupChat = async (groupData) => {
+// Updated createGroupChat function
+const createGroupChat = async (groupData) => {
     try {
-      const response = await conversationAPI.createGroupChat(groupData);
-      const newConversationId= response.data.conversation_id;
-      const updatedConversations=await fetchConversations();
-      const newConversation = updatedConversations.find(conv => conv.id === newConversationId);
-      if (newConversation) {
-        // Now you are sure newConversation is not undefined
-        // setConversations is already handled by fetchConversations, so we only need to set the active one
-        setActiveConversation(newConversation);
-      }
+        const response = await conversationAPI.createGroupChat(groupData);
+        const newConversationId= response.data.conversation_id;
+
+        // Fetch all conversations again to get the new one
+        const updatedConversations=await fetchConversations();
+        
+        // Find and set the newly created conversation as active
+        const newConversation = updatedConversations.find(conv => conv.id === newConversationId);
+        if (newConversation) {
+            setActiveConversation(newConversation);
+        }
+        return { success: true };
     } catch (error) {
-      console.error(error);
-      setError('Failed to create group');
-      return null;
+        console.error(error);
+        setError('Failed to create group');
+        return null;
     }
-  }
+}
 
 
   const selectConversation = async (conversation) => {
@@ -327,6 +327,38 @@ export const ChatProvider = ({ children }) => {
     });
   };
 
+  // After
+const addParticipantToGroup = async (conversationId, userId) => {
+    try {
+      const response = await conversationAPI.addParticipant(conversationId, { user_id: userId });
+      if (response.status === 200) {
+        // The WebSocket event will now handle the UI update.
+        // We only return success here.
+        return { success: true };
+      }
+      return { success: false, error: response.data.error || 'Failed to add member' };
+    } catch (err) {
+      console.error('Failed to add participant', err);
+      return { success: false, error: err.response?.data?.error || 'An unexpected error occurred' };
+    }
+};
+
+  // After
+const removeParticipantFromGroup = async (conversationId, userId) => {
+    try {
+      const response = await conversationAPI.removeParticipant(conversationId, userId);
+      if (response.status === 200) {
+        // The WebSocket event will handle the UI update.
+        // We only return success here.
+        return { success: true };
+      }
+      return { success: false, error: response.data.error || 'Failed to remove member' };
+    } catch (err) {
+      console.error('Failed to remove participant', err);
+      return { success: false, error: err.response?.data?.error || 'An unexpected error occurred' };
+    }
+};
+
   const value = {
     conversations,
     activeConversation,
@@ -345,6 +377,8 @@ export const ChatProvider = ({ children }) => {
     updateMessageStatus,
     setTypingStatus,
     updatePresenceStatus,
+    addParticipantToGroup,
+    removeParticipantFromGroup,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

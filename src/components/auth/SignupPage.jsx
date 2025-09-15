@@ -170,7 +170,7 @@ const SignupPage = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   className="w-full pl-12 pr-4 py-3 bg-gray-800 bg-opacity-50 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-gray-400 border border-gray-700 hover:border-blue-500"
-                  placeholder="Phone Number"
+                  placeholder="Phone Number (e.g. +919876543210)"
                   required
                 />
               </div>

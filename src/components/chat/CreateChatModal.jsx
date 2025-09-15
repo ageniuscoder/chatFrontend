@@ -37,8 +37,12 @@ const CreateChatModal = ({ isOpen, onClose }) => {
       return;
     }
     const memberIDs = selectedMembers.map(m => m.id);
-    await createGroupChat({ name: groupName, member_ids: memberIDs });
-    onClose();
+    const result = await createGroupChat({ name: groupName, member_ids: memberIDs });
+    if (result.success) {
+        onClose();
+    } else {
+        toast.error(result.error || "Failed to create group.");
+    }
   };
 
   const handleAddMember = (user) => {
