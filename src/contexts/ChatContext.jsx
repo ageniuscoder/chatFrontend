@@ -19,12 +19,15 @@ export const ChatProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [typingUsers, setTypingUsers] = useState({});
-  const { user } = useAuth();
+  const { user,isAuthenticated } = useAuth();
   const PAGE_SIZE = 50;
 
   useEffect(() => {
-    fetchConversations();
-  }, []);
+    // ✅ Only fetch conversations if the user is authenticated
+    if (isAuthenticated) {
+      fetchConversations();
+    }
+  }, [isAuthenticated]); 
 
   const fetchConversations = async () => {
     try {

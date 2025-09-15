@@ -4,9 +4,9 @@ import { useAuth } from '../../contexts/AuthContext.jsx';
 import Loading from './Loading';
 
 const Layout = ({ children, requireAuth = true }) => {
-  const { loading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth(); // ✅ Use isLoading
 
-  if (loading) {
+  if (isLoading) { // ✅ Check for the new initial loading state
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loading size="lg" />

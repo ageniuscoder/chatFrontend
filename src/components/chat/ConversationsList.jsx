@@ -23,7 +23,6 @@ const ConversationsList = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
   };
 
   const goToProfile = () => {

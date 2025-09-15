@@ -23,9 +23,6 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      window.location.href = '/login';
-    }
     return Promise.reject(error);
   }
 );
@@ -35,6 +32,7 @@ export const authAPI = {
   signupInitiate: (data) => api.post('/signup/initiate', data),
   signupVerify: (data) => api.post('/signup/verify', data),
   login: (data) => api.post('/login', data),
+  logout: () => api.post('/logout'), // ✅ Add new logout API call
   forgotInitiate: (data) => api.post('/forgot/initiate', data),
   forgotReset: (data) => api.post('/forgot/reset', data),
 };

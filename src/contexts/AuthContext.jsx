@@ -1,14 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authAPI, userAPI } from '../utils/api';
 import { useApi } from '../hooks/useApi';
-import {eraseCookie } from '../utils/cookieUtils';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // ✅ New state for initial loading
 
-  // Use your custom hook for API calls
   const loginApi = useApi(authAPI.login);
   const signupInitiateApi = useApi(authAPI.signupInitiate);
   const signupVerifyApi = useApi(authAPI.signupVerify);
@@ -22,15 +21,18 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    // Attempt to fetch the user profile. The browser will automatically send the JWT cookie.
-    // If the cookie is valid, the API call will succeed.
-    // If it's invalid or missing, the API call will fail, and the Axios interceptor will handle the redirection.
-    const result = await profileApi.execute();
-    if (result.success) {
-      setUser(result.data);
-    } else {
-      // No need to manually erase the cookie, as it will be invalid or missing.
+    try {
+      const result = await profileApi.execute();
+      if (result.success) {
+        setUser(result.data);
+      } else { // FIX: Explicitly handle failed authentication
+        setUser(null);
+      }
+    } catch (error) {
+      // The useApi hook handles setting the error state, so we just set the user to null here.
       setUser(null);
+    } finally {
+      setIsLoading(false); // ✅ Set loading to false after check is complete
     }
   };
 
@@ -39,8 +41,7 @@ export const AuthProvider = ({ children }) => {
     if (result.success) {
       const profileResult = await profileApi.execute();
       if (profileResult.success) setUser(profileResult.data);
-      return { success: true,data: profileResult.data}
-      
+      return { success: true, data: profileResult.data };
     }
     return { success: false, message: result.error || 'Login failed' };
   };
@@ -64,7 +65,7 @@ export const AuthProvider = ({ children }) => {
       otp: resetData.otp,
       new_password: resetData.new_password,
     });
-    return result; // Explicitly return the result with success/error properties
+    return result;
   };
 
   const updateProfile = async (profileData) => {
@@ -73,13 +74,22 @@ export const AuthProvider = ({ children }) => {
     return result;
   };
 
-  const logout = () => {
-    eraseCookie('token');
+  const logout = async () => {
+    // 1. Immediately set the user state to null. This will cause the UI
+    //    to unmount protected components and trigger a redirect.
     setUser(null);
+    try {
+      // 2. Call the backend to clear the HTTP-only cookie in the background.
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // The state is already updated, so no further action is needed here.
+    }
   };
 
   const value = {
     user,
+    isLoading, // ✅ Expose the new state
     loading:
       loginApi.loading ||
       signupInitiateApi.loading ||
