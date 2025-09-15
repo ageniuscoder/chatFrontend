@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authAPI, userAPI } from '../utils/api';
 import { useApi } from '../hooks/useApi';
-import { getCookie,eraseCookie } from '../utils/cookieUtils';
+import {eraseCookie } from '../utils/cookieUtils';
 
 const AuthContext = createContext();
 
@@ -22,15 +22,15 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    const token = getCookie('token');
-    if (token) {
-      const result = await profileApi.execute();
-      if (result.success) {
-        setUser(result.data);
-      } else {
-        eraseCookie('token');
-        setUser(null);
-      }
+    // Attempt to fetch the user profile. The browser will automatically send the JWT cookie.
+    // If the cookie is valid, the API call will succeed.
+    // If it's invalid or missing, the API call will fail, and the Axios interceptor will handle the redirection.
+    const result = await profileApi.execute();
+    if (result.success) {
+      setUser(result.data);
+    } else {
+      // No need to manually erase the cookie, as it will be invalid or missing.
+      setUser(null);
     }
   };
 
