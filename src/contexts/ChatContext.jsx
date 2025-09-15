@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { conversationAPI, messageAPI, featureAPI } from '../utils/api';
+import { conversationAPI, messageAPI} from '../utils/api';
 import { useAuth } from './AuthContext';
 
 const ChatContext = createContext();

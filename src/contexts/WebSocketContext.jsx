@@ -3,7 +3,7 @@ import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useAuth } from './AuthContext';
 import { useChat } from './ChatContext';
 import { WEBSOCKET_URL } from '../utils/constants';
-import { getCookie } from '../utils/cookieUtils';
+
 
 const WebSocketContext = createContext();
 
