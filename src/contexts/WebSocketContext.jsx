@@ -3,6 +3,7 @@ import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useAuth } from './AuthContext';
 import { useChat } from './ChatContext';
 import { WEBSOCKET_URL } from '../utils/constants';
+import { getCookie } from '../utils/cookieUtils';
 
 const WebSocketContext = createContext();
 
@@ -18,8 +19,9 @@ export const WebSocketProvider = ({ children }) => {
   const { isAuthenticated } = useAuth();
   const { addMessage, updateMessageStatus, setTypingStatus, updatePresenceStatus,fetchConversations } = useChat();
 
-  const token = isAuthenticated ? localStorage.getItem('token') : null;
-  const socketUrl = token ? `${WEBSOCKET_URL}?token=${token}` : null;
+  // The JWT token is now sent automatically as an HTTP-only cookie.
+  // We no longer need to pass it in the URL.
+  const socketUrl = isAuthenticated ? `${WEBSOCKET_URL}` : null;
 
   // The critical fix is here: using the onMessage callback
   // instead of a separate useEffect hook on lastMessage.

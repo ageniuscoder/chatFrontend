@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authAPI, userAPI } from '../utils/api';
 import { useApi } from '../hooks/useApi';
+import { getCookie,eraseCookie } from '../utils/cookieUtils';
 
 const AuthContext = createContext();
 
@@ -21,13 +22,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem('token');
+    const token = getCookie('token');
     if (token) {
       const result = await profileApi.execute();
       if (result.success) {
         setUser(result.data);
       } else {
-        localStorage.removeItem('token');
+        eraseCookie('token');
+        setUser(null);
       }
     }
   };
@@ -35,7 +37,6 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     const result = await loginApi.execute({ username, password });
     if (result.success) {
-      localStorage.setItem('token', result.data.token);
       const profileResult = await profileApi.execute();
       if (profileResult.success) setUser(profileResult.data);
       return { success: true,data: profileResult.data}
@@ -49,7 +50,6 @@ export const AuthProvider = ({ children }) => {
   const signupVerify = async (verificationData) => {
     const result = await signupVerifyApi.execute(verificationData);
     if (result.success) {
-      localStorage.setItem('token', result.data.token);
       const profileResult = await profileApi.execute();
       if (profileResult.success) setUser(profileResult.data);
     }
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    eraseCookie('token');
     setUser(null);
   };
 
