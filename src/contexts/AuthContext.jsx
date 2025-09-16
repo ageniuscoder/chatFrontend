@@ -57,11 +57,11 @@ export const AuthProvider = ({ children }) => {
     return result;
   };
 
-  const forgotPassword = (phone) => forgotApi.execute({ phone });
+  const forgotPassword = (email) => forgotApi.execute({ email });
 
   const resetPassword = async (resetData) => {
     const result = await resetApi.execute({
-      phone: resetData.phone,
+      email: resetData.email,
       otp: resetData.otp,
       new_password: resetData.new_password,
     });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MessageCircle, ArrowLeft, Eye, EyeOff, Smartphone, Lock } from 'lucide-react';
+import { MessageCircle, ArrowLeft, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Loading from '../common/Loading';
 import { toast } from 'react-toastify';
@@ -19,7 +19,7 @@ const ForgotPasswordPage = () => {
     }
     console.log("[STATE] Initializing formData with empty values.");
     return {
-      phone: '',
+      email: '',
       otp: '',
       new_password: '',
       confirm_password: ''
@@ -47,13 +47,13 @@ const ForgotPasswordPage = () => {
 
   const handleStep1Submit = async (e) => {
     e.preventDefault();
-    if(formData.phone.trim().length < 10){
-      toast.error("Please enter a valid phone number.");
-      setFormData((prev) => ({ ...prev, phone: '' }));
-      return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+        toast.error("Please enter a valid email address.");
+        return;
     }
     console.log("[FLOW] handleStep1Submit called.");
-    const result = await forgotPassword(formData.phone);
+    const result = await forgotPassword(formData.email);
     console.log("[API] forgotPassword API response:", result);
     
     if (result.success) {
@@ -81,7 +81,7 @@ const ForgotPasswordPage = () => {
     }
 
     const result = await resetPassword({
-      phone: formData.phone,
+      email: formData.email,
       otp: formData.otp,
       new_password: formData.new_password
     });
@@ -152,16 +152,16 @@ const ForgotPasswordPage = () => {
             <form onSubmit={handleStep1Submit} className="space-y-6">
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                  <Smartphone size={20} />
+                  <Mail size={20} />
                 </span>
                 <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleChange}
                   className="w-full pl-12 pr-4 py-3 bg-gray-800 bg-opacity-50 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-gray-400 border border-gray-700 hover:border-blue-500"
-                  placeholder="Enter your phone number"
+                  placeholder="Enter your email address"
                   required
                 />
               </div>
@@ -178,7 +178,7 @@ const ForgotPasswordPage = () => {
             <form onSubmit={handleStep2Submit} className="space-y-6">
               <div className="text-center mb-6">
                 <p className="text-gray-400 mb-2">We sent a reset code to:</p>
-                <p className="font-semibold text-white text-lg">{formData.phone}</p>
+                <p className="font-semibold text-white text-lg">{formData.email}</p>
               </div>
 
               <div className="relative">

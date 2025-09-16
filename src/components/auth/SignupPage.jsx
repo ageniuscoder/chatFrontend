@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, ArrowLeft, User, Smartphone, MessageCircle } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, User, Mail, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Loading from '../common/Loading';
 import { toast } from 'react-toastify';
@@ -15,7 +15,7 @@ const SignupPage = () => {
     }
     return {
       username: '',
-      phone: '',
+      email: '',
       password: '',
       confirmPassword: '',
       otp: ''
@@ -55,7 +55,7 @@ const SignupPage = () => {
 
     const result = await signupInitiate({
       username: formData.username,
-      phone: formData.phone,
+      email: formData.email,
       password: formData.password
     });
 
@@ -79,7 +79,7 @@ const SignupPage = () => {
 
     const result = await signupVerify({
       username: formData.username,
-      phone: formData.phone,
+      email: formData.email,
       password: formData.password,
       otp
     });
@@ -135,7 +135,7 @@ const SignupPage = () => {
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 text-transparent bg-clip-text mb-1">MmChat</h1>
           <p className="text-xl font-bold bg-gradient-to-r from-green-300 via-blue-300 to-purple-300 text-transparent bg-clip-text text-center tracking-wide">
-            {step === 1 ? 'Join the conversation today' : 'Enter the OTP sent to your phone'}
+            {step === 1 ? 'Join the conversation today' : 'Enter the OTP sent to your email'}
           </p>
         </div>
 
@@ -159,18 +159,18 @@ const SignupPage = () => {
                 />
               </div>
 
-              {/* Phone Number Field */}
+              {/* Email Field */}
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                  <Smartphone size={20} />
+                  <Mail size={20} />
                 </span>
                 <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
+                  type="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleChange}
                   className="w-full pl-12 pr-4 py-3 bg-gray-800 bg-opacity-50 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-gray-400 border border-gray-700 hover:border-blue-500"
-                  placeholder="Phone Number (e.g. +919876543210)"
+                  placeholder="Email Address"
                   required
                 />
               </div>
@@ -228,7 +228,7 @@ const SignupPage = () => {
             <form onSubmit={handleStep2Submit} className="space-y-6">
               <div className="text-center mb-6">
                 <p className="text-gray-400 mb-2">We sent a verification code to:</p>
-                <p className="font-semibold text-white text-lg">{formData.phone}</p>
+                <p className="font-semibold text-white text-lg">{formData.email}</p>
               </div>
 
               <div className="relative">
