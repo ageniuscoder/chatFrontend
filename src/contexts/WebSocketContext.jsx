@@ -50,6 +50,11 @@ export const WebSocketProvider = ({ children }) => {
             setTypingStatus(data.conversation_id, data.sender_username, false);
             break;
 
+          case 'system_message': // ✅ New case for system messages
+              // The message is already in the correct format, so we can directly add it.
+              addMessage({ ...data, id: data.sent_at }); // Use timestamp as a unique ID
+              break;
+
           case 'presence':
             console.log('👤 Presence update:', data);
             // You may want to add a state update here for presence

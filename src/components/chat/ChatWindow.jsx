@@ -146,21 +146,37 @@ const ChatWindow = () => {
             <MessageCircle className="w-16 h-16 mx-auto mt-4 text-green-600 opacity-50 animate-pulse-slow" />
           </div>
         ) : (
-          conversationMessages.map((msg, index) => (
-            <MessageBubble
-              key={msg.id}
-              message={msg}
-              isOwn={msg.sender_id === user.id}
-              showAvatar={
-                index === 0 ||
-                (conversationMessages[index - 1].sender_id !== msg.sender_id)
+          // Replace the existing .map() loop with this
+          conversationMessages.map((msg, index) => {
+              // Check for the new message type
+              if (msg.type === 'system_message') {
+                  return (
+                      <div key={msg.id} className="text-center my-4">
+                          <span className="inline-block text-xs text-gray-400 bg-gray-800 px-3 py-1 rounded-full shadow-inner shadow-gray-900/50">
+                              {msg.content}
+                          </span>
+                      </div>
+                  );
               }
-              showTime={
-                index === conversationMessages.length - 1 ||
-                new Date(conversationMessages[index + 1].sent_at) - new Date(msg.sent_at) > 300000
-              }
-            />
-          ))
+              
+              // Existing logic for regular messages
+              return (
+                  <MessageBubble
+                      key={msg.id}
+                      message={msg}
+                      isOwn={msg.sender_id === user.id}
+                      showAvatar={
+                          index === 0 ||
+                          (conversationMessages[index - 1]?.sender_id !== msg.sender_id &&
+                          conversationMessages[index - 1]?.type !== 'system_message') // Fix: Check previous message type
+                      }
+                      showTime={
+                          index === conversationMessages.length - 1 ||
+                          new Date(conversationMessages[index + 1]?.sent_at) - new Date(msg.sent_at) > 300000
+                      }
+                  />
+              );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>
