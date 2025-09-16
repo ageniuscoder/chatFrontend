@@ -70,7 +70,11 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (profileData) => {
     const result = await updateProfileApi.execute(profileData);
-    if (result.success) setUser(updateProfileApi.data);
+    if (result.success) {
+      // ✅ FIX: Directly update the user state with the data from the API response.
+      // This prevents the race condition and unnecessary re-fetching.
+      setUser(result.data);
+    }
     return result;
   };
 
