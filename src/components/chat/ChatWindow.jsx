@@ -163,9 +163,10 @@ const ChatWindow = ({ onBack }) => {
         `}
       </style>
       
+      {/* Container for the entire chat window with a fixed header and footer */}
       <div className="flex flex-col h-full bg-gray-900 rounded-xl shadow-lg shadow-green-900/30 relative overflow-hidden">
-        {/* Chat Header */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-800 bg-gray-800/80 backdrop-blur-sm relative z-10 shadow-md shadow-green-900/20">
+        {/* Chat Header - Now fixed to the top */}
+        <div className="flex items-center justify-between p-3 border-b border-gray-800 bg-gray-800/80 backdrop-blur-sm fixed top-0 w-full z-20 shadow-md shadow-green-900/20">
           <div className="flex items-center space-x-3">
             {onBack && (
               <button
@@ -214,8 +215,8 @@ const ChatWindow = ({ onBack }) => {
           </div>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar-dark p-4 space-y-3 relative">
+        {/* Messages - Added padding to account for the fixed header */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar-dark p-4 space-y-3 relative pt-[64px] pb-[72px]">
           {conversationMessages.length === 0 ? (
             <div className="text-center py-8 text-gray-600">
               <p className="text-base font-semibold text-gray-300">No messages yet. Start the conversation!</p>
@@ -250,8 +251,8 @@ const ChatWindow = ({ onBack }) => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Message Input */}
-        <div ref={inputContainerRef} className="p-4 border-t border-gray-800 bg-gray-800/80 backdrop-blur-sm relative z-10 shadow-lg shadow-green-900/20">
+        {/* Message Input - Now fixed to the bottom */}
+        <div ref={inputContainerRef} className="p-4 border-t border-gray-800 bg-gray-800/80 backdrop-blur-sm fixed bottom-0 w-full z-20 shadow-lg shadow-green-900/20">
           <div className="flex items-end space-x-3">
             <button className="p-2 bg-gray-700/60 text-gray-300 rounded-full hover:bg-gray-700 hover:text-green-400 transition-all duration-300 shadow-md shadow-gray-900/40 transform hover:scale-105">
               <Paperclip className="w-5 h-5" />
