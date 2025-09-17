@@ -3,9 +3,15 @@ import ConversationsList from './ConversationsList';
 import ChatWindow from './ChatWindow';
 import { useChat } from '../../contexts/ChatContext';
 import { MessageCircle } from 'lucide-react';
+import { useMediaQuery } from 'react-responsive';
 
 const ChatLayout = () => {
-  const { activeConversation } = useChat();
+  const { activeConversation, selectConversation } = useChat();
+  const isMobile = useMediaQuery({ maxWidth: 768 }); // A common breakpoint for mobile devices
+
+  const handleBack = () => {
+    selectConversation(null); // Deselect the active conversation
+  };
 
   return (
     <div className="flex h-screen bg-black text-gray-100 antialiased font-sans">
@@ -14,7 +20,7 @@ const ChatLayout = () => {
         <div className="absolute inset-0 border border-blue-500 rounded-lg opacity-30 pointer-events-none animate-pulse-light z-0"></div>
 
         {/* Left Sidebar - Conversations */}
-        <div className="w-80 bg-gray-900 border-r border-gray-800 flex flex-col p-3 z-10 relative">
+        <div className={`flex flex-col p-3 z-10 relative ${isMobile ? 'w-full' : 'w-80 bg-gray-900 border-r border-gray-800'}`} style={{ display: isMobile && activeConversation ? 'none' : 'flex' }}>
           {/* Top border glow */}
           <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 opacity-75"></div>
           {/* Left border glow */}
@@ -24,12 +30,11 @@ const ChatLayout = () => {
           {/* Right border glow */}
           <div className="absolute top-0 right-0 h-full w-0.5 bg-gradient-to-b from-purple-500 to-blue-500 opacity-75"></div>
 
-
           <ConversationsList />
         </div>
 
         {/* Right Panel - Chat Window */}
-        <div className="flex-1 flex flex-col bg-gray-950 p-4 z-10 relative">
+        <div className={`flex-1 flex flex-col bg-gray-950 p-4 z-10 relative ${isMobile && !activeConversation ? 'hidden' : ''}`}>
           {/* Top border glow */}
           <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-500 to-teal-500 opacity-75"></div>
           {/* Right border glow */}
@@ -39,9 +44,8 @@ const ChatLayout = () => {
           {/* Left border glow */}
           <div className="absolute top-0 left-0 h-full w-0.5 bg-gradient-to-b from-green-500 to-teal-500 opacity-75"></div>
 
-
           {activeConversation ? (
-            <ChatWindow />
+            <ChatWindow onBack={isMobile ? handleBack : null} />
           ) : (
             <div className="flex-1 flex items-center justify-center bg-gray-900 rounded-xl relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-black opacity-30 animate-pulse-slow"></div>

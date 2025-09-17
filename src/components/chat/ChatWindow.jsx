@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Phone, VideoIcon, MoreVertical, Paperclip, Smile, MessageCircle, Search } from 'lucide-react';
+import { Send, Phone, VideoIcon, MoreVertical, Paperclip, Smile, MessageCircle, Search, ArrowLeft } from 'lucide-react';
 import { useChat } from '../../contexts/ChatContext.jsx';
 import { useWebSocketContext } from '../../contexts/WebSocketContext.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
@@ -10,7 +10,7 @@ import { formatLastSeen } from '../../utils/dateUtils';
 import GroupMembersModal from './GroupMembersModal.jsx';
 import EmojiPicker from './EmojiPicker'; // Extracted to separate component
 
-const ChatWindow = () => {
+const ChatWindow = ({ onBack }) => {
   const [message, setMessage] = useState('');
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [showMembersModal, setShowMembersModal] = useState(false);
@@ -167,6 +167,14 @@ const ChatWindow = () => {
         {/* Chat Header */}
         <div className="flex items-center justify-between p-3 border-b border-gray-800 bg-gray-800/80 backdrop-blur-sm relative z-10 shadow-md shadow-green-900/20">
           <div className="flex items-center space-x-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="p-1 rounded-full text-white hover:bg-gray-700 transition-colors md:hidden"
+              >
+                <ArrowLeft size={24} />
+              </button>
+            )}
             <Avatar
               src={activeConversation.avatar}
               alt={activeConversation.name}
