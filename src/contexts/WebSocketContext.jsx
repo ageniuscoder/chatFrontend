@@ -37,6 +37,10 @@ export const WebSocketProvider = ({ children }) => {
             // We fix this mismatch by aliasing the ID here before adding the message.
             addMessage({ ...data, id: data.message_id });
             break;
+          
+          case 'edited_message':
+            addMessage({...data, type:'edited_message'});
+            break;
 
           case 'read_receipt':
             updateMessageStatus(data.message_id, data.conversation_id, 'read');

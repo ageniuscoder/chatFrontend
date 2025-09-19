@@ -62,6 +62,7 @@ export const conversationAPI = {
 export const messageAPI = {
   sendMessage: (data) => api.post('/messages', data),
   markAsRead: (data) => api.post('/messages/read', data),
+  editMessage: (messageId, data) => api.patch(`/messages/${messageId}`, data),
 };
 
 export default api;

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Phone, VideoIcon, MoreVertical, Paperclip, Smile, MessageCircle, Search, ArrowLeft } from 'lucide-react';
+import { Send, Phone, VideoIcon, MoreVertical, Paperclip, Smile, MessageCircle, Search, ArrowLeft,Check } from 'lucide-react';
 import { useChat } from '../../contexts/ChatContext.jsx';
 import { useWebSocketContext } from '../../contexts/WebSocketContext.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
@@ -15,6 +15,8 @@ const ChatWindow = ({ onBack }) => {
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [messageToEdit, setMessageToEdit] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const emojiButtonRef = useRef(null);
@@ -26,7 +28,8 @@ const ChatWindow = ({ onBack }) => {
     messages, 
     sendMessage, 
     markAsRead,
-    typingUsers 
+    typingUsers,
+    editMessage, 
   } = useChat();
   const { startTyping, stopTyping } = useWebSocketContext();
 
@@ -94,7 +97,14 @@ const ChatWindow = ({ onBack }) => {
 
   const handleSend = async () => {
     if (message.trim() && activeConversation) {
-      await sendMessage(activeConversation.id, message.trim());
+      if(isEditing && messageToEdit){
+        await editMessage(messageToEdit.id, message.trim());
+        setIsEditing(false);
+        setMessageToEdit(null);
+      }
+      else{
+        await sendMessage(activeConversation.id, message.trim());
+      }
       setMessage('');
       stopTyping(activeConversation.id);
       inputRef.current?.focus();
@@ -144,6 +154,13 @@ const ChatWindow = ({ onBack }) => {
       el.setSelectionRange(caretPos, caretPos);
     }, 0);
   };
+
+  const handleEdit=(message)=>{
+    setMessageToEdit(message);
+    setMessage(message.content);
+    setIsEditing(true);
+    inputRef.current?.focus();
+  }
 
   if (!activeConversation) {
     return null;
@@ -243,6 +260,7 @@ const ChatWindow = ({ onBack }) => {
                     index === conversationMessages.length - 1 ||
                     new Date(conversationMessages[index + 1]?.sent_at) - new Date(msg.sent_at) > 300000
                   }
+                  onEdit={handleEdit}
                 />
               )
             ))
@@ -262,7 +280,7 @@ const ChatWindow = ({ onBack }) => {
                 value={message}
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                placeholder={isEditing?"Editing Message...":"Type your message..."}
                 className="w-full pl-4 pr-10 py-2 bg-gray-700 border border-transparent rounded-3xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-white placeholder-gray-400 text-sm resize-none transition-all duration-300 shadow-inner shadow-gray-900/60 custom-scrollbar-dark"
                 rows="1"
                 style={{ minHeight: '40px', maxHeight: textareaMaxHeight, overflowY: 'auto' }}
@@ -296,7 +314,7 @@ const ChatWindow = ({ onBack }) => {
               disabled={!message.trim()}
               className="p-3 bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-full hover:from-green-600 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-800/40"
             >
-              <Send className="w-5 h-5" />
+             {isEditing ? <Check className="w-5 h-5" /> : <Send className="w-5 h-5" />}
             </button>
           </div>
         </div>

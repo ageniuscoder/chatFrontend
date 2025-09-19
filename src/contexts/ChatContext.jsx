@@ -19,6 +19,7 @@ export const ChatProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [typingUsers, setTypingUsers] = useState({});
+  const [messageToEdit, setMessageToEdit] = useState(null); // New state for message being edited
   const { user,isAuthenticated } = useAuth();
   const PAGE_SIZE = 50;
 
@@ -125,6 +126,18 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
+  const editMessage = async (messageId, newContent) => {
+    try {
+      const response = await messageAPI.editMessage(messageId, { content: newContent });
+      return response.data;
+      
+    } catch (error) {
+      console.error('Failed to edit message:', error);
+      setError('Failed to edit message');
+      return null;
+    }
+  }
+
   const markAsRead = async (conversationId, messageIds) => {
     try {
       if (!Array.isArray(messageIds) || messageIds.length === 0) return;
@@ -207,9 +220,20 @@ const createGroupChat = async (groupData) => {
     }
   };
 
+
   const addMessage = (message) => {
     setMessages(prev => {
       const existingMessages = prev[message.conversation_id] || [];
+
+      if(message.type==='edited_message'){
+        return{
+          ...prev,
+          [message.conversation_id]: existingMessages.map(msg=>
+            msg.id===message.message_id ? {...msg,content:message.content, edited_at:new Date().toISOString()} : msg
+          )
+        }
+      }
+
       
       // Check for a temporary message to replace (for the sender's UI)
       const tempMessageIndex = existingMessages.findIndex(
@@ -372,6 +396,9 @@ const removeParticipantFromGroup = async (conversationId, userId) => {
     fetchConversations,
     fetchMessages,
     sendMessage,
+    editMessage,
+    messageToEdit,
+    setMessageToEdit,
     markAsRead,
     createPrivateChat,
     createGroupChat, // Add this line
